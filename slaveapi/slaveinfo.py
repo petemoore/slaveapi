@@ -7,11 +7,16 @@ class Slave(object):
     def __init__(self, name):
         self.name = name
 
+    def load_info(self):
+        self.load_slavealloc_info()
+        self.load_inventory_info()
+
     def load_slavealloc_info(self):
         log.debug("Getting info for %s", self.name)
         info = get_slave(name=self.name)
-        print info
         self.enabled = info['enabled']
         self.basedir = info['basedir']
         self.notes = info['notes']
-        log.debug("Got info: %s", self.notes)
+
+    def load_inventory_info(self):
+        pass
