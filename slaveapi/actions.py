@@ -1,9 +1,8 @@
-import gevent
-
 import logging
 log = logging.getLogger(__name__)
 
-def reboot(slave):
-    log.debug("imma rebooot!")
-    gevent.sleep(5)
-    log.debug("i rebooteded!")
+from slaveapi.slaveinfo import Slave
+
+def reboot(name):
+    slave = Slave(name)
+    slave.load_slavealloc_info()
