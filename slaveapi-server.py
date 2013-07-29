@@ -8,7 +8,11 @@ from gevent.event import Event
 from slaveapi import config
 from slaveapi.server import SlaveAPIWSGIApp
 
-config["slavealloc_api"] = "http://slavealloc.build.mozilla.org"
+# Trailing slashes are important because urljoin sucks!
+config["slavealloc_api"] = "http://slavealloc.build.mozilla.org/api/"
+config["bugzilla_api"] = "https://bugzilla-dev.allizom.org/rest/"
+config["inventory_api"] = "https://inventory.mozilla.org/en-US/tasty/v3/"
+
 app = SlaveAPIWSGIApp()
 listener = gevent.socket.socket()
 listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
