@@ -10,8 +10,12 @@ from slaveapi.server import SlaveAPIWSGIApp
 
 # Trailing slashes are important because urljoin sucks!
 config["slavealloc_api"] = "http://slavealloc.build.mozilla.org/api/"
-config["bugzilla_api"] = "https://bugzilla-dev.allizom.org/rest/"
 config["inventory_api"] = "https://inventory.mozilla.org/en-US/tasty/v3/"
+config["bugzilla_api"] = "https://bugzilla-dev.allizom.org/rest/"
+config["bugzilla_product"] = "mozilla.org"
+config["bugzilla_component"] = "Release Engineering: Machine Management"
+config["bugzilla_username"] = "bhearsum@mozilla.com"
+config["bugzilla_password"] = slaveapi.secrets.bugzilla_password
 
 app = SlaveAPIWSGIApp()
 listener = gevent.socket.socket()
