@@ -1,4 +1,4 @@
-from .bugzilla.api import ProblemTrackingBug
+from .bugzilla import ProblemTrackingBug
 from .slavealloc import get_slave
 
 import logging
