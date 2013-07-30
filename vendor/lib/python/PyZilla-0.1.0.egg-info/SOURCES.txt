@@ -1,0 +1,6 @@
+README.txt
+pyzilla.py
+PyZilla.egg-info/PKG-INFO
+PyZilla.egg-info/SOURCES.txt
+PyZilla.egg-info/dependency_links.txt
+PyZilla.egg-info/top_level.txt

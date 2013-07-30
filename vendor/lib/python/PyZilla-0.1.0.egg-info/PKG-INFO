@@ -1,0 +1,46 @@
+Metadata-Version: 1.1
+Name: PyZilla
+Version: 0.1.0
+Summary: Python wrapper for the BugZilla XML-RPC API
+Home-page: http://github.com/nibrahim/PyZilla
+Author: Noufal Ibrahim
+Author-email: noufal@nibrahim.net.in
+License: LICENSE.txt
+Description: =======
+        PyZilla
+        =======
+        
+        PyZilla is a simple wrapper on top the ``xmlrpclib`` package which
+        provides an object that can be used to make XML-RPC calls. 
+        
+        The module exposes the ``BugZilla`` object which you can instantiate
+        with the uri to the ``xmlrpc.cgi`` file on your bugzilla installation.
+        
+        Here's a simple usage example::
+        
+            >>> from pyzilla import BugZilla
+            >>> bzilla = BugZilla("http://bugzilla.example.com/xmlrpc.cgi")
+            >>> bzilla.login("username", "password")
+            >>> bzilla.Bugzilla.version()
+        
+        The module will store the auth cookies in the same directory of
+        invocation in a file called ``cookies.txt``.
+        
+        For details of the API, please refer to the `Bugzilla webservice docs
+        <http://www.bugzilla.org/docs/3.0/html/api/Bugzilla/WebService.html>`_.
+        
+        For a saner interface to bugzilla, please refer to the `Bugzilla
+        REST API <https://wiki.mozilla.org/Bugzilla:REST_API>`_.
+        
+        
+        
+        
+        
+Platform: UNKNOWN
+Classifier: Development Status :: 4 - BetaIntended Audience :: Developers
+Classifier: License :: OSI Approved :: GNU General Public License (GPL)Operating System :: POSIX
+Classifier: Operating System :: Microsoft :: Windows
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Topic :: Software Development :: Libraries :: Python ModulesTopic :: Software Development :: Quality Assurance
+Classifier: Topic :: Utilities
+Classifier: Programming Language :: Python
