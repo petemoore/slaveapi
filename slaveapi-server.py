@@ -5,17 +5,19 @@ import gevent
 from gevent import pywsgi
 from gevent.event import Event
 
-from slaveapi import config
+from slaveapi import config, bugzilla_client, secrets
 from slaveapi.server import SlaveAPIWSGIApp
 
 # Trailing slashes are important because urljoin sucks!
 config["slavealloc_api"] = "http://slavealloc.build.mozilla.org/api/"
 config["inventory_api"] = "https://inventory.mozilla.org/en-US/tasty/v3/"
-config["bugzilla_api"] = "https://bugzilla-dev.allizom.org/rest/"
+config["bugzilla_api"] = "https://bugzilla-dev.allizom.org/xmlrpc.cgi"
 config["bugzilla_product"] = "mozilla.org"
 config["bugzilla_component"] = "Release Engineering: Machine Management"
 config["bugzilla_username"] = "bhearsum@mozilla.com"
-config["bugzilla_password"] = slaveapi.secrets.bugzilla_password
+
+bugzilla_client.configure(config["bugzilla_api"])
+bugzilla_client.login(config["bugzilla_username"], secrets.bugzilla_password)
 
 app = SlaveAPIWSGIApp()
 listener = gevent.socket.socket()
