@@ -35,7 +35,7 @@ class CookieAuthXMLRPCTransport(xmlrpclib.SafeTransport):
 
     """
 
-    def __init__(self, cookiefile = False, user_agent = False):
+    def __init__(self, cookiefile = None, user_agent = None):
         self.cookiefile = cookiefile or "cookies.txt"
         self.user_agent = user_agent or create_user_agent()
         xmlrpclib.SafeTransport.__init__(self)
@@ -76,7 +76,17 @@ class CookieAuthXMLRPCTransport(xmlrpclib.SafeTransport):
         # creating a cookie jar for my cookies
         cj = cookielib.LWPCookieJar()
         self.send_content(h, request_body)
-        errcode, errmsg, headers = h.getreply()
+        try:
+            # In Python <= 2.6, h is an HTTP object, which has a nice
+            # "getreply" method.
+            errcode, errmsg, headers = h.getreply()
+        except AttributeError:
+            # In other reasons we have an HTTPConnection, which has a
+            # different interface
+            resp = h.getresponse()
+            errcode = resp.status
+            errmsg = resp.reason
+            headers = resp.msg
         cresponse = CookieResponse(headers)
         cj.extract_cookies(cresponse, crequest)
         if len(cj) >0 and not os.path.exists(self.cookiefile):
@@ -88,13 +98,17 @@ class CookieAuthXMLRPCTransport(xmlrpclib.SafeTransport):
         self.verbose = verbose
         try:
             sock = h._conn.sock
+            return self._parse_response(h.getfile(), sock)
         except AttributeError:
             sock = None
-        return self._parse_response(h.getfile(), sock)
+            return self.parse_response(resp)
 
 class BugZilla(xmlrpclib.Server):
-    def __init__(self, url, verbose = False):
-        xmlrpclib.Server.__init__(self, url, CookieAuthXMLRPCTransport(),
+    def __init__(self, url, verbose = False, cookiefile =  None,
+            user_agent=None):
+        xmlrpclib.Server.__init__(self, url,
+                CookieAuthXMLRPCTransport(cookiefile = cookiefile,
+                    user_agent = user_agent),
                                   verbose = verbose)
 
     def login(self, username, password):
