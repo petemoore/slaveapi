@@ -1,7 +1,7 @@
 import logging
 log = logging.getLogger(__name__)
 
-from slaveapi.slaveinfo import Slave
+from .slaveinfo import Slave
 
 def reboot(name):
     slave = Slave(name)

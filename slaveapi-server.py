@@ -16,7 +16,10 @@ config["bugzilla_product"] = "mozilla.org"
 config["bugzilla_component"] = "Release Engineering: Machine Management"
 config["bugzilla_username"] = "bhearsum@mozilla.com"
 
-bugzilla_client.configure(config["bugzilla_api"])
+import sys
+secrets.bugzilla_password = sys.argv[1]
+
+bugzilla_client.configure(config["bugzilla_api"], verbose=1)
 bugzilla_client.login(config["bugzilla_username"], secrets.bugzilla_password)
 
 app = SlaveAPIWSGIApp()

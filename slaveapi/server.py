@@ -3,7 +3,7 @@ import logging
 from gevent import queue, spawn
 from gevent.event import Event
 
-from slaveapi.actions import reboot
+from .actions import reboot
 
 log = logging.getLogger(__name__)
 

@@ -1,4 +1,5 @@
-from slavealloc import get_slave
+from .bugzilla.api import ProblemTrackingBug
+from .slavealloc import get_slave
 
 import logging
 log = logging.getLogger(__name__)
@@ -9,21 +10,30 @@ class PDU(object):
         self.ip = None
 
     def off(self):
+        pass
     def on(self):
+        pass
     def powercycle(self, delay=None):
+        pass
 
 class OOBInterface(object):
     def __init__(self):
         self.ip = None
 
     def off(self):
+        pass
     def on(self):
+        pass
     def powercycle(self, hard=False):
+        pass
 
 class Slave(object):
     def __init__(self, name):
         self.name = name
         self.bug = None
+        self.enabled = None
+        self.basedir = None
+        self.notes = None
 
     # TODO: should cache this stuff
     def load_info(self):

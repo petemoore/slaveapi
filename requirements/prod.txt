@@ -1,5 +1,4 @@
 WebOb==1.2.3
 requests==1.2.3
 grequests==0.2.0
-# This is the special bhearsum version until https://github.com/williamh/PyZilla/pull/2 is merged.
-pyzilla==0.1.0py27
+bztools==0.0.2
