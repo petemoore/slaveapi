@@ -1,3 +1,5 @@
+from xmlrpclib import Fault
+
 from slaveapi import bugzilla_client, config
 
 class Bug(object):
@@ -24,8 +26,7 @@ class ProblemTrackingBug(Bug):
         try:
             data = Bug.load(self)
             self.machine_state = data.get("machine-state", None)
-        # catch something more specifi here
-        except:
+        except Fault:
             if createIfMissing:
                 self.id_ = create_slave_bug(self.slave_name)
             else:
@@ -54,6 +55,7 @@ def create_slave_bug(slave_name):
 
 def add_comment():
     pass
+
 
 def get_reboot_bug(create=False):
     pass
