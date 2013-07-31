@@ -1,6 +1,6 @@
 import logging
 
-from bzrest.errors import INVALID_ALIAS, INVALID_BUG
+from bzrest.errors import INVALID_ALIAS, INVALID_BUG, BugzillaAPIError
 
 from slaveapi import config, bugzilla_client
 
@@ -15,10 +15,13 @@ class Bug(object):
             self.load()
 
     def load(self):
-        data = load_bug(self.id_)
+        data = bugzilla_client.get_bug(self.id_)
         if data:
             self.depends = data.get("depends_on", [])
         return data
+
+    def add_comment(self, comment):
+        bugzilla_client.add_comment(self.id_, comment)
 
 
 class ProblemTrackingBug(Bug):
@@ -33,27 +36,20 @@ class ProblemTrackingBug(Bug):
             self.machine_state = data.get("machine-state", None)
         except BugzillaAPIError as e:
             if e.bugzilla_code in (INVALID_ALIAS, INVALID_BUG) and createIfMissing:
-                self.id_ = create_slave_bug(self.slave_name)
+                self.create()
             else:
                 raise
 
-
-def create_slave_bug(slave_name):
-    data = {
-        "product": config["bugzilla_product"],
-        "component": config["bugzilla_component"],
-        "summary": "%s problem tracking" % slave_name,
-        "version": "other",
-        # todo: do we care about setting these correctly?
-        "op_sys": "All",
-        "platform": "All"
-    }
-    resp = bugzilla_request("POST", "bug", data=data)
-    return resp["id"]
-
-
-def add_comment():
-    pass
-
-def get_reboot_bug(create=False):
-    pass
+    def create(self):
+        data = {
+            "product": config["bugzilla_product"],
+            "component": config["bugzilla_component"],
+            "summary": "%s problem tracking" % self.slave_name,
+            "version": "other",
+            "alias": self.slave_name,
+            # todo: do we care about setting these correctly?
+            "op_sys": "All",
+            "platform": "All"
+        }
+        resp = bugzilla_client.create_bug(data)
+        self.id_ = resp["id"]

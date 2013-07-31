@@ -5,7 +5,7 @@ import gevent
 from gevent import pywsgi
 from gevent.event import Event
 
-from slaveapi import config, secrets
+from slaveapi import bugzilla_client, config, secrets
 from slaveapi.server import SlaveAPIWSGIApp
 
 # Trailing slashes are important because urljoin sucks!
@@ -19,7 +19,7 @@ config["bugzilla_username"] = "bhearsum@mozilla.com"
 import sys
 secrets.bugzilla_password = sys.argv[1]
 config["bugzilla_password"] = secrets.bugzilla_password
-config.bugzilla_client.configure(
+bugzilla_client.configure(
     config["bugzilla_api"],
     config["bugzilla_username"],
     config["bugzilla_password"],

@@ -53,6 +53,7 @@ class Slave(object):
         self.ip = None
         self.fqdn = None
         self.oob = None
+        self.colo = None
 
     def load_bug_info(self, create=False):
         self.bug = ProblemTrackingBug(self.name)
