@@ -11,14 +11,18 @@ from slaveapi.server import SlaveAPIWSGIApp
 # Trailing slashes are important because urljoin sucks!
 config["slavealloc_api"] = "http://slavealloc.build.mozilla.org/api/"
 config["inventory_api"] = "https://inventory.mozilla.org/en-US/tasty/v3/"
+config["inventory_username"] = "bhearsum@mozilla.com"
 config["bugzilla_api"] = "https://bugzilla-dev.allizom.org/rest/"
 config["bugzilla_product"] = "mozilla.org"
 config["bugzilla_component"] = "Release Engineering: Machine Management"
 config["bugzilla_username"] = "bhearsum@mozilla.com"
+config["default_domain"] = "build.mozilla.org"
 
 import sys
 secrets.bugzilla_password = sys.argv[1]
+secrets.inventory_password = sys.argv[2]
 config["bugzilla_password"] = secrets.bugzilla_password
+config["inventory_password"] = secrets.inventory_password
 bugzilla_client.configure(
     config["bugzilla_api"],
     config["bugzilla_username"],

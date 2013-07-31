@@ -1,8 +1,8 @@
 from urlparse import urljoin
 
-import grequests
+import requests
 
-from slaveapi import config
+from . import config
 
 def get_slave(id_=None, name=None):
     if id_ and name:
@@ -15,4 +15,4 @@ def get_slave(id_=None, name=None):
     else:
         raise Exception()
 
-    return grequests.get(url).send().json()
+    return requests.get(url).json()
