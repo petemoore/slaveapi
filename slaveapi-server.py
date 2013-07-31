@@ -19,6 +19,11 @@ config["bugzilla_username"] = "bhearsum@mozilla.com"
 import sys
 secrets.bugzilla_password = sys.argv[1]
 config["bugzilla_password"] = secrets.bugzilla_password
+config.bugzilla_client.configure(
+    config["bugzilla_api"],
+    config["bugzilla_username"],
+    config["bugzilla_password"],
+)
 
 app = SlaveAPIWSGIApp()
 listener = gevent.socket.socket()

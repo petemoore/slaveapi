@@ -1,22 +1,10 @@
-import json
 import logging
-from urlparse import urljoin
 
-import grequests
-from requests.exceptions import HTTPError
+from bzrest.errors import INVALID_ALIAS, INVALID_BUG
 
-from slaveapi import config
+from slaveapi import config, bugzilla_client
 
 log = logging.getLogger(__name__)
-
-
-bad_alias_code = 100
-bad_bug_code = 101
-
-class BugzillaAPIError(HTTPError):
-    def __init__(self, bugzilla_code, *args, **kwargs):
-        self.bugzilla_code = bugzilla_code
-        HTTPError.__init__(self, *args, **kwargs)
 
 
 class Bug(object):
@@ -44,38 +32,10 @@ class ProblemTrackingBug(Bug):
             data = Bug.load(self)
             self.machine_state = data.get("machine-state", None)
         except BugzillaAPIError as e:
-            if e.bugzilla_code in (bad_alias_code, bad_bug_code) and createIfMissing:
+            if e.bugzilla_code in (INVALID_ALIAS, INVALID_BUG) and createIfMissing:
                 self.id_ = create_slave_bug(self.slave_name)
             else:
                 raise
-
-
-def bugzilla_request(method, url, data=None):
-    url = urljoin(config["bugzilla_api"], url)
-    params = {
-        "Bugzilla_login": config["bugzilla_username"],
-        "Bugzilla_password": config["bugzilla_password"],
-    }
-    headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-    }
-    if data:
-        data = json.dumps(data)
-    r = grequests.request(method, url, params=params, data=data, headers=headers).send()
-    r.raise_for_status()
-    # Bugzilla's REST API doesn't always return 4xx when it maybe should.
-    # (Eg, loading a non-existent bug returns 200). We need to check the
-    # response to know for sure whether or not there was an error.
-    resp = r.json()
-    if resp.get("error", False):
-        raise BugzillaAPIError(resp["code"], resp["message"], response=resp)
-    return resp
-
-
-def load_bug(id_):
-    resp = bugzilla_request("GET", "bug/%s" % id_)
-    return resp["bugs"][0]
 
 
 def create_slave_bug(slave_name):

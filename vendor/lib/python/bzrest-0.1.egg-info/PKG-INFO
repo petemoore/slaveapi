@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: bzrest
+Version: 0.1
+Summary: A client for Bugzilla's native REST API.
+Home-page: UNKNOWN
+Author: Ben Hearsum
+Author-email: UNKNOWN
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
