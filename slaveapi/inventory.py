@@ -2,11 +2,9 @@ from urlparse import urljoin
 
 import requests
 
-from . import config
-
-def get_system(fqdn):
-    url = urljoin(config["inventory_api"], "system/?format=json&hostname=%s" % fqdn)
-    auth = (config["inventory_username"], config["inventory_password"])
+def get_system(fqdn, api, username, password):
+    url = urljoin(api, "system/?format=json&hostname=%s" % fqdn)
+    auth = (username, password)
     info = requests.get(url, auth=auth).json()["objects"][0]
 
     # We do some post processing because PDUs are buried in the key/value store

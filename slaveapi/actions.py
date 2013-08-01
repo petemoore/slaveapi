@@ -1,7 +1,7 @@
 import logging
 log = logging.getLogger(__name__)
 
-from .slaveinfo import Slave
+from .slave import Slave
 
 def reboot(name):
     bug_comment = ""
@@ -11,8 +11,8 @@ def reboot(name):
     bug_comment += "Attempting SSH reboot..."
 
     # Try an SSH reboot first of all...
-    do_ssh_reboot(slave)
-    alive = slave.is_alive():
+    slave.ssh_reboot()
+    alive = slave.is_alive()
 
     # If that doesn't work, maybe an mgmt reboot will...
     if not alive and slave.mgmt:
@@ -27,7 +27,7 @@ def reboot(name):
         bug_comment += "Failed.\n"
         bug_comment += "Attempting PDU reboot..."
         slave.pdu.reboot()
-        alive = slave.is_alive():
+        alive = slave.is_alive()
 
     if alive:
         bug_comment += "Success!"

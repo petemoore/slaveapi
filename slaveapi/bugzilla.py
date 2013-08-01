@@ -1,8 +1,6 @@
 import logging
 
-from bzrest.errors import INVALID_ALIAS, INVALID_BUG, BugzillaAPIError
-
-from slaveapi import config, bugzilla_client
+from slaveapi import bugzilla_client
 
 log = logging.getLogger(__name__)
 
@@ -38,19 +36,13 @@ class ProblemTrackingBug(Bug):
         Bug.__init__(self, id_=slave_name, loadInfo=loadInfo)
 
     def load(self, createIfMissing=True):
-        try:
-            data = Bug.load(self)
-            self.machine_state = data.get("machine-state", None)
-        except BugzillaAPIError as e:
-            if e.bugzilla_code in (INVALID_ALIAS, INVALID_BUG) and createIfMissing:
-                self.create()
-            else:
-                raise
+        data = Bug.load(self)
+        self.machine_state = data.get("machine-state", None)
 
-    def create(self):
+    def create(self, product, component):
         data = {
-            "product": config["bugzilla_product"],
-            "component": config["bugzilla_component"],
+            "product": product,
+            "component": component,
             "summary": "%s problem tracking" % self.slave_name,
             "version": "other",
             "alias": self.slave_name,
