@@ -1,7 +1,17 @@
+Wanted info:
+- Is slave running a job?
+- is slave running buildbot? is it connected?
+
 Clients needed:
 - inventory
 - bugzilla
 - more slavealloc stuff
 
 Other:
+- Panda/Tegra reboots.
+-- Use mozpool?
+- Figure where and how to log events; retrieve them.
+-- Maybe slavealloc db? A different db?
 - Query API for status of command
+- Can we wait and return data for some cheaper commands, rather than making them do requests?
+-- Can we have a timeout and add a jobid later?
