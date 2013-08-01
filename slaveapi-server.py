@@ -21,6 +21,7 @@ config["ssh_credentials_file"] = "credentials.json"
 
 import json
 from getpass import getpass
+# TODO: test credentials at startup
 config["ssh_credentials"] = json.load(open(config["ssh_credentials_file"]))
 config["inventory_password"] = getpass("Inventory password: ")
 config["bugzilla_password"] = getpass("Bugzilla password: ")

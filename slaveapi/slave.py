@@ -151,13 +151,13 @@ class Slave(object):
         if debug["pdu_fqdn"]:
             self.pdu = PDU(debug["pdu_fqdn"], debug["pdu_port"])
 
-    def load_bug_info(self, create=False):
+    def load_bug_info(self, createIfMissing=False):
         log.info("Getting bug debug for %s", self.name)
         self.bug = ProblemTrackingBug(self.name, loadInfo=False)
         try:
             self.bug.load()
         except BugzillaAPIError as e:
-            if e.bugzilla_code in (INVALID_ALIAS, INVALID_BUG) and create:
+            if e.bugzilla_code in (INVALID_ALIAS, INVALID_BUG) and createIfMissing:
                 log.info("Couldn't find bug for %s, creating it...", self.name)
                 self.bug.create(config["bugzilla_product"], config["bugzilla_component"])
             else:
