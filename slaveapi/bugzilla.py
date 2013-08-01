@@ -23,6 +23,13 @@ class Bug(object):
     def add_comment(self, comment):
         bugzilla_client.add_comment(self.id_, comment)
 
+    def reopen(self, comment):
+        data = {
+            "comment": comment,
+            "status": "REOPENED",
+        }
+        bugzilla_client.update_bug(self.id_, data)
+
 
 class ProblemTrackingBug(Bug):
     def __init__(self, slave_name, loadInfo=True):
@@ -30,7 +37,7 @@ class ProblemTrackingBug(Bug):
         self.machine_state = None
         Bug.__init__(self, id_=slave_name, loadInfo=loadInfo)
 
-    def load(self, createIfMissing=False):
+    def load(self, createIfMissing=True):
         try:
             data = Bug.load(self)
             self.machine_state = data.get("machine-state", None)

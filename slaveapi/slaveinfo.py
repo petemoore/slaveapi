@@ -80,3 +80,6 @@ class Slave(object):
 
     def load_bug_info(self, create=False):
         self.bug = ProblemTrackingBug(self.name)
+
+    def is_alive(self, timeout=300):
+        pass
