@@ -50,8 +50,8 @@ class RemoteConsole(object):
         self.fqdn = fqdn
         self.credentials = credentials
         self.connected = False
-        self.conn = SSHClient()
-        self.conn.set_missing_host_key_policy(IgnorePolicy())
+        self.client = SSHClient()
+        self.client.set_missing_host_key_policy(IgnorePolicy())
 
     def connect(self, timeout=30):
         last_exc = None
@@ -59,7 +59,7 @@ class RemoteConsole(object):
             for p in passwords:
                 try:
                     log.info("Attempting to connect to %s as %s", self.fqdn, username)
-                    self.conn.connect(hostname=self.fqdn, username=username, password=p, timeout=timeout, look_for_keys=False)
+                    self.client.connect(hostname=self.fqdn, username=username, password=p, timeout=timeout, look_for_keys=False)
                     log.info("Connection to %s succeeded!", self.fqdn)
                     self.connected = True
                     break
@@ -74,25 +74,37 @@ class RemoteConsole(object):
 
     def disconnect(self):
         if self.connected:
-            self.conn.close()
+            self.client.close()
         self.connected = False
 
-    def reboot(self):
-        log.info("Attempting to reboot %s", self.fqdn)
+    def run_cmd(self, cmd):
         if not self.connected:
             self.connect()
 
+        log.debug("Running %s on %s", cmd, self.fqdn)
+        shell = self._get_shell()
+        shell.sendall("%s\r\n" % cmd)
+        return shell.recv_exit_status()
+
+    def reboot(self):
+        log.info("Attempting to reboot %s", self.fqdn)
+
+        shell = self._get_shell()
         for cmd in self.reboot_commands:
-            log.debug("Trying command: %s", cmd)
-            stdin, stdout, stderr = self.conn.exec_command(cmd)
-            stdin.close()
-            if stdout.channel.recv_exit_status():
+            
+            shell.sendall(cmd)
+            if shell.recv_exit_status():
                 log.info("Successfully initiated reboot of %s", self.fqdn)
                 # Success! We're done!
                 break
         else:
             raise Exception("Unable to reboot %s" % self.fqdn)
 
+    def _get_shell(self):
+        shell = self.client.get_transport().open_session()
+        shell.get_pty()
+        shell.invoke_shell()
+        return shell
 
 class Slave(object):
     def __init__(self, name):

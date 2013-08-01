@@ -2,3 +2,6 @@ Clients needed:
 - inventory
 - bugzilla
 - more slavealloc stuff
+
+Windows SSH support:
+- parse %errorlevel%/$? for command status, because windows ssh daemon doesn't support exec :(
