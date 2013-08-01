@@ -2,3 +2,6 @@ Clients needed:
 - inventory
 - bugzilla
 - more slavealloc stuff
+
+Other:
+- Query API for status of command
