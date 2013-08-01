@@ -5,7 +5,7 @@ import gevent
 from gevent import pywsgi
 from gevent.event import Event
 
-from slaveapi import bugzilla_client, config, secrets
+from slaveapi import bugzilla_client, config
 from slaveapi.server import SlaveAPIWSGIApp
 
 # Trailing slashes are important because urljoin sucks!
@@ -17,20 +17,18 @@ config["bugzilla_product"] = "mozilla.org"
 config["bugzilla_component"] = "Release Engineering: Machine Management"
 config["bugzilla_username"] = "bhearsum@mozilla.com"
 config["default_domain"] = "build.mozilla.org"
+config["ssh_credentials_file"] = "credentials.json"
 
-import sys
-secrets.bugzilla_password = sys.argv[1]
-secrets.inventory_password = sys.argv[2]
-config["bugzilla_password"] = secrets.bugzilla_password
-config["inventory_password"] = secrets.inventory_password
+import json
+from getpass import getpass
+config["ssh_credentials"] = json.load(open(config["ssh_credentials_file"]))
+config["inventory_password"] = getpass("Inventory password: ")
+config["bugzilla_password"] = getpass("Bugzilla password: ")
 bugzilla_client.configure(
     config["bugzilla_api"],
     config["bugzilla_username"],
     config["bugzilla_password"],
 )
-config["ssh_credentials"] = {
-    'cltbld': ['abc123', 'redacted']
-}
 
 app = SlaveAPIWSGIApp()
 listener = gevent.socket.socket()
@@ -38,8 +36,10 @@ listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 listener.bind(("127.0.0.1", 9999))
 listener.listen(256)
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 log = logging.getLogger()
+logging.getLogger("paramiko").setLevel(logging.WARN)
+logging.getLogger("requests").setLevel(logging.WARN)
 
 class logger(object):
     def write(self, msg):

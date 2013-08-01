@@ -1,8 +1,4 @@
-import logging
-
 from slaveapi import bugzilla_client
-
-log = logging.getLogger(__name__)
 
 
 class Bug(object):

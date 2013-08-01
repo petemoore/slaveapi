@@ -58,12 +58,16 @@ class RemoteConsole(object):
         for username, passwords in self.credentials.iteritems():
             for p in passwords:
                 try:
-                    self.conn.connect(hostname=self.fqdn, username=username, password=p, timeout=timeout)
+                    log.info("Attempting to connect to %s as %s", self.fqdn, username)
+                    self.conn.connect(hostname=self.fqdn, username=username, password=p, timeout=timeout, look_for_keys=False)
+                    log.info("Connection to %s succeeded!", self.fqdn)
                     self.connected = True
+                    break
                 # We can eat most of these exceptions because we try multiple
                 # different auths. We need to hang on to it to re-raise in case
                 # we ultimately fail.
                 except AuthenticationException, e:
+                    log.info("Authentication failure.")
                     last_exc = e
         if not self.connected:
             raise last_exc
@@ -74,13 +78,16 @@ class RemoteConsole(object):
         self.connected = False
 
     def reboot(self):
+        log.info("Attempting to reboot %s", self.fqdn)
         if not self.connected:
             self.connect()
 
         for cmd in self.reboot_commands:
+            log.debug("Trying command: %s", cmd)
             stdin, stdout, stderr = self.conn.exec_command(cmd)
             stdin.close()
             if stdout.channel.recv_exit_status():
+                log.info("Successfully initiated reboot of %s", self.fqdn)
                 # Success! We're done!
                 break
         else:
@@ -117,27 +124,29 @@ class Slave(object):
         return "%s.%s" % (self.name, self.domain)
 
     def load_slavealloc_info(self):
-        log.debug("Getting slavealloc info for %s", self.name)
-        info = slavealloc.get_slave(config["slavealloc_api"], name=self.name)
-        self.enabled = info["enabled"]
-        self.basedir = info["basedir"]
-        self.notes = info["notes"]
+        log.info("Getting slavealloc debug for %s", self.name)
+        debug = slavealloc.get_slave(config["slavealloc_api"], name=self.name)
+        self.enabled = debug["enabled"]
+        self.basedir = debug["basedir"]
+        self.notes = debug["notes"]
 
     def load_inventory_info(self):
-        log.debug("Getting inventory info for %s", self.name)
-        info = inventory.get_system(
+        log.info("Getting inventory debug for %s", self.name)
+        debug = inventory.get_system(
             self.fqdn, config["inventory_api"], config["inventory_username"],
             config["inventory_password"],
         )
-        if info["pdu_fqdn"]:
-            self.pdu = PDU(info["pdu_fqdn"], info["pdu_port"])
+        if debug["pdu_fqdn"]:
+            self.pdu = PDU(debug["pdu_fqdn"], debug["pdu_port"])
 
     def load_bug_info(self, create=False):
+        log.info("Getting bug debug for %s", self.name)
         self.bug = ProblemTrackingBug(self.name, loadInfo=False)
         try:
             self.bug.load()
         except BugzillaAPIError as e:
             if e.bugzilla_code in (INVALID_ALIAS, INVALID_BUG) and create:
+                log.info("Couldn't find bug for %s, creating it...", self.name)
                 self.bug.create(config["bugzilla_product"], config["bugzilla_component"])
             else:
                 raise
@@ -147,26 +156,25 @@ class Slave(object):
         console.reboot()
 
     def is_alive(self, timeout=300, retry_interval=5):
+        log.info("Waiting up to %d seconds for slave to revive", timeout)
         time_left = timeout
         console = self._get_console()
         while time_left > 0:
             try:
                 console.connect(time_left)
-                # If the connection succeeds, great!
+                log.info("Slave is alive!")
                 return True
-            # Socket exceptions are especially common if a connection attempt
+            # Exceptions are especially common if a connection attempt
             # happens mid-shutdown. They can also be caused by transient host
             # or network issue.
-            except socket.error:
+            except (socket.error, SSHException):
                 # We should sleep between retries to avoid spamming the host.
+                log.debug("Got connection error, sleeping %d before retrying", retry_interval)
                 time.sleep(retry_interval)
                 time_left -= retry_interval
                 if time_left <= 0:
+                    log.exception("Timeout exceeded, giving up.")
                     return False
-            # SSHExceptions are different. These are generally raised if the
-            # connection doesn't succeed within the alloted time.
-            except SSHException:
-                return False
 
     def _get_console(self):
         return RemoteConsole(self.fqdn, config["ssh_credentials"])
