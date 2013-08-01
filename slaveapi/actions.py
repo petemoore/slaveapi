@@ -18,7 +18,7 @@ def reboot(name):
     if not alive and slave.mgmt:
         bug_comment += "Failed.\n"
         bug_comment += "Attempting management interface reboot..."
-        slave.mgmt.reboot()
+        slave.mgmt.powercycle()
         alive = slave.is_alive()
 
     # Is mgmt interface _and_ PDU a valid configuration?
@@ -26,7 +26,7 @@ def reboot(name):
     if not alive and slave.pdu:
         bug_comment += "Failed.\n"
         bug_comment += "Attempting PDU reboot..."
-        slave.pdu.reboot()
+        slave.pdu.powercycle()
         alive = slave.is_alive()
 
     if alive:

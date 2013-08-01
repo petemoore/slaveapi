@@ -28,6 +28,9 @@ bugzilla_client.configure(
     config["bugzilla_username"],
     config["bugzilla_password"],
 )
+config["ssh_credentials"] = {
+    'cltbld': ['abc123', 'redacted']
+}
 
 app = SlaveAPIWSGIApp()
 listener = gevent.socket.socket()

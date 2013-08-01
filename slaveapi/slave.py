@@ -1,11 +1,15 @@
+import socket
+import time
+
 from bzrest.errors import BugzillaAPIError, INVALID_ALIAS, INVALID_BUG
 
 from dns import resolver
 
-from paramiko import SSHClient
+from paramiko import SSHClient, AuthenticationException, SSHException
 
-from . import config, inventory, slavealloc
-from .bugzilla import ProblemTrackingBug
+from . import config
+from .clients import inventory, slavealloc
+from .clients.bugzilla import ProblemTrackingBug
 
 import logging
 log = logging.getLogger(__name__)
@@ -40,14 +44,47 @@ class IgnorePolicy(object):
         pass
 
 class RemoteConsole(object):
-    def __init__(self, connect=True):
+    reboot_commands = ["sudo reboot", "reboot", "shutdown /f /t 0 /r"]
+
+    def __init__(self, fqdn, credentials):
+        self.fqdn = fqdn
+        self.credentials = credentials
+        self.connected = False
         self.conn = SSHClient()
         self.conn.set_missing_host_key_policy(IgnorePolicy())
-        if connect:
+
+    def connect(self, timeout=30):
+        last_exc = None
+        for username, passwords in self.credentials.iteritems():
+            for p in passwords:
+                try:
+                    self.conn.connect(hostname=self.fqdn, username=username, password=p, timeout=timeout)
+                    self.connected = True
+                # We can eat most of these exceptions because we try multiple
+                # different auths. We need to hang on to it to re-raise in case
+                # we ultimately fail.
+                except AuthenticationException, e:
+                    last_exc = e
+        if not self.connected:
+            raise last_exc
+
+    def disconnect(self):
+        if self.connected:
+            self.conn.close()
+        self.connected = False
+
+    def reboot(self):
+        if not self.connected:
             self.connect()
 
-    def connect(self, credentials):
-        pass
+        for cmd in self.reboot_commands:
+            stdin, stdout, stderr = self.conn.exec_command(cmd)
+            stdin.close()
+            if stdout.channel.recv_exit_status():
+                # Success! We're done!
+                break
+        else:
+            raise Exception("Unable to reboot %s" % self.fqdn)
 
 
 class Slave(object):
@@ -98,7 +135,7 @@ class Slave(object):
     def load_bug_info(self, create=False):
         self.bug = ProblemTrackingBug(self.name, loadInfo=False)
         try:
-            self.bug.load_bug_info()
+            self.bug.load()
         except BugzillaAPIError as e:
             if e.bugzilla_code in (INVALID_ALIAS, INVALID_BUG) and create:
                 self.bug.create(config["bugzilla_product"], config["bugzilla_component"])
@@ -106,7 +143,30 @@ class Slave(object):
                 raise
 
     def ssh_reboot(self):
-        conn = SSHClient()
+        console = self._get_console()
+        console.reboot()
 
-    def is_alive(self, timeout=300):
-        pass
+    def is_alive(self, timeout=300, retry_interval=5):
+        time_left = timeout
+        console = self._get_console()
+        while time_left > 0:
+            try:
+                console.connect(time_left)
+                # If the connection succeeds, great!
+                return True
+            # Socket exceptions are especially common if a connection attempt
+            # happens mid-shutdown. They can also be caused by transient host
+            # or network issue.
+            except socket.error:
+                # We should sleep between retries to avoid spamming the host.
+                time.sleep(retry_interval)
+                time_left -= retry_interval
+                if time_left <= 0:
+                    return False
+            # SSHExceptions are different. These are generally raised if the
+            # connection doesn't succeed within the alloted time.
+            except SSHException:
+                return False
+
+    def _get_console(self):
+        return RemoteConsole(self.fqdn, config["ssh_credentials"])
