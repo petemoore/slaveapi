@@ -77,15 +77,27 @@ class RemoteConsole(object):
             self.client.close()
         self.connected = False
 
-    def run_cmd(self, cmd):
+    def run_cmd(self, cmd, timeout=300):
         if not self.connected:
             self.connect()
 
         log.debug("Running %s on %s", cmd, self.fqdn)
         shell = self._get_shell()
-        shell.sendall("%s\r\n" % cmd)
-        return shell.recv_exit_status()
+        shell.sendall("%s\r\nexit\r\n" % cmd)
 
+        time_left = timeout
+        while True:
+            if shell.exit_status_ready:
+                return shell.recv_exit_status()
+
+            if time_left <= 0:
+                # todo: any other cleanup needed?
+                channel.close()
+                # todo: raise a better exception here
+                raise Exception("Timed out when running command.")
+
+            time.sleep(5)
+            
     def reboot(self):
         log.info("Attempting to reboot %s", self.fqdn)
 
