@@ -1,3 +1,4 @@
+import re
 import socket
 import time
 
@@ -50,8 +51,8 @@ class RemoteConsole(object):
         self.fqdn = fqdn
         self.credentials = credentials
         self.connected = False
-        self.conn = SSHClient()
-        self.conn.set_missing_host_key_policy(IgnorePolicy())
+        self.client = SSHClient()
+        self.client.set_missing_host_key_policy(IgnorePolicy())
 
     def connect(self, timeout=30):
         last_exc = None
@@ -59,7 +60,7 @@ class RemoteConsole(object):
             for p in passwords:
                 try:
                     log.info("Attempting to connect to %s as %s", self.fqdn, username)
-                    self.conn.connect(hostname=self.fqdn, username=username, password=p, timeout=timeout, look_for_keys=False)
+                    self.client.connect(hostname=self.fqdn, username=username, password=p, timeout=timeout, look_for_keys=False)
                     log.info("Connection to %s succeeded!", self.fqdn)
                     self.connected = True
                     break
@@ -74,8 +75,59 @@ class RemoteConsole(object):
 
     def disconnect(self):
         if self.connected:
-            self.conn.close()
+            self.client.close()
         self.connected = False
+
+    def run_cmd(self, cmd, timeout=60):
+        if not self.connected:
+            self.connect()
+
+        try:
+            time_left = timeout
+            log.debug("Running %s on %s through exec", cmd, self.fqdn)
+            stdin, stdout, stderr = self.client.exec_command(cmd)
+            stdin.close()
+            while True:
+                if stdout.channel.exit_status_ready():
+                    log.info("Successfully ran command.")
+                    return stdout.channel.recv_exit_status(), stdout.read()
+                else:
+                    if time_left <= 0:
+                        raise Exception("Timed out when running command.")
+                    else:
+                        time_left -= 1
+                        time.sleep(1)
+        except SSHException:
+            # The server probably doesn't support "exec". That's OK, we can
+            # try to fall back onto the shell.
+            self.disconnect()
+            self.connect()
+            log.debug("Running %s on %s through the shell", cmd, self.fqdn)
+            shell = self._get_shell()
+            shell.sendall("%s\r\necho $?\r\n" % cmd)
+
+            time_left = timeout
+            data = ""
+            while True:
+                while shell.recv_ready():
+                    data += shell.recv(1024)
+
+                if "echo $?" in data:
+                    data = re.sub(r"\x1b[^m]*m", "", data)
+                    data = re.sub(r"\x1b\[\d+;\d+f", "", data)
+                    print "\n".join(data.splitlines())
+                    output, status = data.split("echo $?\r\n")
+                    rc = int(status.split("\r\n")[0])
+                    return rc, output
+                else:
+                    # Still waiting for the command to finish
+                    if time_left <= 0:
+                        shell.close()
+                        raise Exception("Timed out when running command.")
+                    else:
+                        time_left -= 5
+                        time.sleep(5)
+
 
     def reboot(self):
         log.info("Attempting to reboot %s", self.fqdn)
@@ -84,15 +136,29 @@ class RemoteConsole(object):
 
         for cmd in self.reboot_commands:
             log.debug("Trying command: %s", cmd)
-            stdin, stdout, stderr = self.conn.exec_command(cmd)
-            stdin.close()
-            if stdout.channel.recv_exit_status():
+            rc, output = self.run_cmd(cmd)
+            if rc == 0:
                 log.info("Successfully initiated reboot of %s", self.fqdn)
                 # Success! We're done!
                 break
+            else:
+                log.info("Reboot failed, rc was %d, output was:", rc)
+                log.info(output)
         else:
             raise Exception("Unable to reboot %s" % self.fqdn)
 
+    def _get_shell(self):
+        shell = self.client.get_transport().open_session()
+        shell.get_pty()
+        shell.invoke_shell()
+        # Clear the screen, wait for the shell to start, and then
+        # read whatever incoming data there is to make sure our consumer
+        # gets something that's nice and clean.
+        shell.sendall("clear\r\n")
+        time.sleep(5)
+        if shell.recv_ready():
+            shell.recv(1024)
+        return shell
 
 class Slave(object):
     def __init__(self, name):
