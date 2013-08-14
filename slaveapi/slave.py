@@ -136,11 +136,11 @@ class RemoteConsole(object):
         shell = self.client.get_transport().open_session()
         shell.get_pty()
         shell.invoke_shell()
-        # Clear the screen, wait for the shell to start, and then
-        # read whatever incoming data there is to make sure our consumer
-        # gets something that's nice and clean.
-        shell.sendall("clear\r\n")
+        # We need to sleep a little bit here to give the shell time to log in.
+        # This won't work in 100% of cases, but it should be generally OK.
         time.sleep(5)
+        # Once that's done we should eat whatever is in the stdout buffer so
+        # that our consumer doesn't need to deal with it.
         if shell.recv_ready():
             shell.recv(1024)
         return shell
