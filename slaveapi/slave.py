@@ -45,7 +45,12 @@ class IgnorePolicy(object):
         pass
 
 class RemoteConsole(object):
-    reboot_commands = ["sudo reboot", "reboot", "shutdown /f /t 0 /r"]
+    # By trying a few different reboot commands we don't need to special case
+    # different types of hosts. The "shutdown" command is for Windows, but uses
+    # hyphens because it gets run through a bash shell. We also delay the
+    # shutdown for a few seconds so that we have time to read the exit status
+    # of the shutdown command.
+    reboot_commands = ["sudo reboot", "reboot", "shutdown -f -t 3 -r"]
 
     def __init__(self, fqdn, credentials):
         self.fqdn = fqdn
@@ -82,27 +87,8 @@ class RemoteConsole(object):
         if not self.connected:
             self.connect()
 
+        log.debug("Running %s on %s through the shell", cmd, self.fqdn)
         try:
-            time_left = timeout
-            log.debug("Running %s on %s through exec", cmd, self.fqdn)
-            stdin, stdout, stderr = self.client.exec_command(cmd)
-            stdin.close()
-            while True:
-                if stdout.channel.exit_status_ready():
-                    log.info("Successfully ran command.")
-                    return stdout.channel.recv_exit_status(), stdout.read()
-                else:
-                    if time_left <= 0:
-                        raise Exception("Timed out when running command.")
-                    else:
-                        time_left -= 1
-                        time.sleep(1)
-        except SSHException:
-            # The server probably doesn't support "exec". That's OK, we can
-            # try to fall back onto the shell.
-            self.disconnect()
-            self.connect()
-            log.debug("Running %s on %s through the shell", cmd, self.fqdn)
             shell = self._get_shell()
             shell.sendall("%s\r\necho $?\r\n" % cmd)
 
@@ -115,7 +101,6 @@ class RemoteConsole(object):
                 if "echo $?" in data:
                     data = re.sub(r"\x1b[^m]*m", "", data)
                     data = re.sub(r"\x1b\[\d+;\d+f", "", data)
-                    print "\n".join(data.splitlines())
                     output, status = data.split("echo $?\r\n")
                     rc = int(status.split("\r\n")[0])
                     return rc, output
@@ -127,12 +112,12 @@ class RemoteConsole(object):
                     else:
                         time_left -= 5
                         time.sleep(5)
+        finally:
+            self.disconnect()
 
 
     def reboot(self):
         log.info("Attempting to reboot %s", self.fqdn)
-        if not self.connected:
-            self.connect()
 
         for cmd in self.reboot_commands:
             log.debug("Trying command: %s", cmd)

@@ -37,7 +37,7 @@ listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 listener.bind(("127.0.0.1", 9999))
 listener.listen(256)
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger()
 logging.getLogger("paramiko").setLevel(logging.WARN)
 logging.getLogger("requests").setLevel(logging.WARN)
