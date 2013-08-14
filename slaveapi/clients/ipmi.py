@@ -19,15 +19,32 @@ class IPMIInterface(object):
         except CalledProcessError:
             return None
 
-    def off(self):
-        pass
+    def off(self, hard=False):
+        if hard:
+            self.run_cmd("power off")
+        else:
+            self.run_cmd("power soft")
+
     def on(self):
-        pass
-    def powercycle(self, hard=False):
-        pass
+        self.run_cmd("power on")
+
+    def powercycle(self, delay=5):
+        self.off(hard=False)
+        time_left = 120
+        while True:
+            if "off" in self.run_cmd("power status"):
+                break
+            else:
+                if time_left <= 0:
+                    break
+                time_left -= 15
+                time.sleep(15)
+        self.off(hard=True)
+        time.sleep(5)
+        self.on()
 
     def run_cmd(self, cmd):
         full_cmd = ["ipmitool", "-H", self.fqdn, "-I", self.interface_type,
                     "-U", self.username, "-P", self.password]
         full_cmd += cmd.split()
-        return check_output(full_cmd, stderr=STDOUT)
+        return chheck_output(full_cmd, stderr=STDOUT)
