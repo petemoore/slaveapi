@@ -2,8 +2,11 @@ import logging
 import socket
 
 import gevent
-from gevent import pywsgi
+from gevent import monkey, pywsgi
 from gevent.event import Event
+
+# Make ALL the things non-blocking.
+monkey.patch_all()
 
 from slaveapi import bugzilla_client, config
 from slaveapi.server import SlaveAPIWSGIApp
