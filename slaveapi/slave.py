@@ -84,6 +84,11 @@ class RemoteConsole(object):
         self.connected = False
 
     def run_cmd(self, cmd, timeout=60):
+        """Runs a command on the remote console. In order to support weird SSH
+           servers that don't support "exec", we do this through a pty and
+           shell, which makes it more complicated than it needs to be. Rather
+           than letting the SSH server deal with retrieving the return code,
+           we need to get it through the shell by parsing $?."""
         if not self.connected:
             self.connect()
 
@@ -98,10 +103,29 @@ class RemoteConsole(object):
                 while shell.recv_ready():
                     data += shell.recv(1024)
 
+                # Once we find this in the data, we know that the command
+                # has finished running. Now we have to dig around to get the
+                # command output and return code.
                 if "echo $?" in data:
+                    # First off, we should strip any shell escape codes that
+                    # may be present.
                     data = re.sub(r"\x1b[^m]*m", "", data)
                     data = re.sub(r"\x1b\[\d+;\d+f", "", data)
+                    # Then we need to roughly split up the output and return
+                    # code portions.
                     output, status = data.split("echo $?\r\n")
+                    # The output needs lots of massaging to get right.
+                    # First we need to strip away everything up to and
+                    # including the echoing of the command we just ran.
+                    output = output.split("%s" % cmd)[1]
+                    # Then we strip away the new prompt that appeared after
+                    # the command was run.
+                    output = output.split("\r\n")[:-2]
+                    # Finally, join the output back together into a useful
+                    # string.
+                    output = "\n".join(output)
+                    # The return code is much easier -- we just want whatever
+                    # was on the first line of the output of "echo $?".
                     rc = int(status.split("\r\n")[0])
                     return rc, output
                 else:
@@ -136,6 +160,7 @@ class RemoteConsole(object):
         shell = self.client.get_transport().open_session()
         shell.get_pty()
         shell.invoke_shell()
+        shell.sendall("clear\r\n")
         # We need to sleep a little bit here to give the shell time to log in.
         # This won't work in 100% of cases, but it should be generally OK.
         time.sleep(5)

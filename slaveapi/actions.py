@@ -1,3 +1,5 @@
+import time
+
 from .slave import Slave
 
 def reboot(name):
@@ -9,6 +11,9 @@ def reboot(name):
 
     # Try an SSH reboot first of all...
     slave.ssh_reboot()
+    # Wait a few seconds before checking for aliveness, because the slave may
+    # still accept connections directly after asking for the reboot.
+    time.sleep(3)
     alive = slave.is_alive()
 
     # If that doesn't work, maybe an mgmt reboot will...
