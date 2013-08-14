@@ -34,10 +34,9 @@ class Slave(object):
         try:
             mgmt_fqdn = "%s-mgmt.%s" % (self.name, config["default_domain"])
             resolver.query(mgmt_fqdn)
-            if IPMIInterface.exists(mgmt_fqdn):
-                self.mgmt = IPMIInterface(mgmt_fqdn)
-            else:
-                self.mgmt = None
+            # This will return None if the IPMI interface doesn't work for some
+            # reason.
+            self.mgmt = IPMIInterface.get(mgmt_fqdn, config["ipmi_username"], config["ipmi_password"])
         except resolver.NXDOMAIN:
             self.mgmt = None
         self.bug = None

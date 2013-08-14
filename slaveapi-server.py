@@ -21,12 +21,14 @@ config["bugzilla_component"] = "Release Engineering: Machine Management"
 config["bugzilla_username"] = "bhearsum@mozilla.com"
 config["default_domain"] = "build.mozilla.org"
 config["ssh_credentials_file"] = "credentials.json"
+config["ipmi_username"] = "releng"
 
 import json
 from getpass import getpass
 # TODO: test credentials at startup
 config["ssh_credentials"] = json.load(open(config["ssh_credentials_file"]))
 config["inventory_password"] = getpass("Inventory password: ")
+config["ipmi_password"] = getpass("IPMI Password: ")
 config["bugzilla_password"] = getpass("Bugzilla password: ")
 bugzilla_client.configure(
     config["bugzilla_api"],
