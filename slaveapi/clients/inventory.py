@@ -2,9 +2,13 @@ from urlparse import urljoin
 
 import requests
 
+import logging
+log = logging.getLogger(__name__)
+
 def get_system(fqdn, api, username, password):
     url = urljoin(api, "system/?format=json&hostname=%s" % fqdn)
     auth = (username, password)
+    log.debug("Making request to %s", url)
     info = requests.get(url, auth=auth).json()["objects"][0]
 
     # We do some post processing because PDUs are buried in the key/value store

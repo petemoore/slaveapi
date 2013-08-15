@@ -2,6 +2,9 @@ import time
 
 from .slave import Slave
 
+import logging
+log = logging.getLogger(__name__)
+
 def reboot(name):
     bug_comment = ""
     slave = Slave(name)
@@ -9,12 +12,16 @@ def reboot(name):
     slave.load_bug_info(createIfMissing=True)
     bug_comment += "Attempting SSH reboot..."
 
+    alive = False
     # Try an SSH reboot first of all...
-    slave.ssh_reboot()
-    # Wait a few seconds before checking for aliveness, because the slave may
-    # still accept connections directly after asking for the reboot.
-    time.sleep(3)
-    alive = slave.is_alive()
+    try:
+        slave.ssh_reboot()
+        # Wait a few seconds before checking for aliveness, because the slave may
+        # still accept connections directly after asking for the reboot.
+        time.sleep(3)
+        alive = slave.is_alive()
+    except:
+        log.exception("Caught exception.")
 
     # If that doesn't work, maybe an mgmt reboot will...
     if not alive and slave.mgmt:

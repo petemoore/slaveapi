@@ -38,22 +38,31 @@ class IPMIInterface(object):
         log.info("Powercycling %s", self.fqdn)
         log.debug("Trying soft shutdown.")
         self.off(hard=False)
-        time_left = 120
-        while True:
-            if "off" in self.run_cmd("power status"):
-                log.debug("Soft shutdown succeeded!")
-                break
+        if self.wait_for_off():
+            log.debug("Soft shutdown succeeded.")
+        else:
+            log.debug("Soft shutdown failed, trying a hard shutdown.")
+            self.off(hard=True)
+            if self.wait_for_off():
+                log.debug("Hard shutdown succeeded.")
             else:
-                if time_left <= 0:
-                    log.debug("Soft shutdown failed, doing it the hard way.")
-                    self.off(hard=True)
-                    break
-                time_left -= 15
-                time.sleep(15)
+                raise Exception()
+        log.debug("Waiting %d seconds before powering on.", delay)
         time.sleep(delay)
         log.debug("Turning machine back on.")
         self.on()
         log.info("Powercycle of %s completed.", self.fqdn)
+
+    def wait_for_off(self, wait=120):
+        time_left = 120
+        while True:
+            if "off" in self.run_cmd("power status"):
+                return True
+            else:
+                if time_left <= 0:
+                    return False
+                time_left -= 15
+                time.sleep(15)
 
     def run_cmd(self, cmd, retries=5):
         full_cmd = ["ipmitool", "-H", self.fqdn, "-I", self.interface_type,

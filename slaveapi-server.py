@@ -46,6 +46,7 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger()
 logging.getLogger("paramiko").setLevel(logging.WARN)
 logging.getLogger("requests").setLevel(logging.WARN)
+logging.getLogger("bzrest").setLevel(logging.WARN)
 
 class logger(object):
     def write(self, msg):
