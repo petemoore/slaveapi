@@ -30,8 +30,9 @@ class ProblemTrackingBug(Bug):
         self.slave_name = slave_name
         self.machine_state = None
         Bug.__init__(self, id_=slave_name, loadInfo=loadInfo)
+        # XXX: should the reboots bug be owned by this? maybe it should be owned by a Slave object instead? where does the method that adds the slave to it go? probably on RebootsBug?
 
-    def load(self, createIfMissing=True):
+    def load(self):
         data = Bug.load(self)
         self.machine_state = data.get("machine-state", None)
 
@@ -48,3 +49,13 @@ class ProblemTrackingBug(Bug):
         }
         resp = bugzilla_client.create_bug(data)
         self.id_ = resp["id"]
+
+
+class RebootsBug(Bug):
+    def __init__(self, datacentre, loadInfo=True):
+        self.datacentre = datacentre
+        Bug.__init__(self, id_datacentre, loadInfo=loadInfo)
+
+    def load(self):
+        data = Bug.load(self)
+        # XXX: should we move bug creation back into here for this and problem tracking bugs? we need to create the reboots bug if a) the alias doesn't exist, b) if it exists and is closed
