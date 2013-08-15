@@ -76,7 +76,6 @@ class SSHConsole(object):
                 if "echo $?" in data:
                     # First off, we should strip any shell escape codes that
                     # may be present.
-                    data = re.sub(r"\x1b[^m]*m", "", data)
                     data = re.sub(r"\x1b\[\d+;\d+f", "", data)
                     # Then we need to roughly split up the output and return
                     # code portions.
