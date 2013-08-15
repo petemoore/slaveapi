@@ -8,5 +8,5 @@ class PDU(object):
     def on(self):
         pass
     def powercycle(self, delay=None):
-        pass
+        raise NotImplementedError()
 
