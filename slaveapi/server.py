@@ -1,4 +1,5 @@
 import logging
+from urlparse import parse_qs
 
 from gevent import queue, spawn
 from gevent.event import Event
@@ -83,20 +84,43 @@ class SlaveAPIWSGIApp(object):
 
     def __call__(self, environ, start_response):
         # /<slave>/...
+        method = getattr(self, "do_%s" % environ["REQUEST_METHOD"], None)
+        if not method:
+            start_response("405 Method Not Allowed", [])
+            return ""
+        return method(environ, start_response)
+
+    def do_GET(self, environ, start_response):
         try:
-            log.debug("Processing request: %s", environ["PATH_INFO"])
+            log.debug("Processing GET request to %s", environ["PATH_INFO"])
             _, _, slave, parts = environ["PATH_INFO"].split("/", 3)
-            parts = parts.split('/')
+            parts = parts.split("/")
+            qs = parse_qs(environ["QUERY_STRING"]
             if parts[0] == "action":
                 if parts[1] == "reboot":
-                    self.processor.add_work(slave, reboot)
+                    requestid = environ["QUERY_STRING"][
+
+    def do_POST(self, environ, start_response):
+        try:
+            log.debug("Processing POST request to %s", environ["PATH_INFO"])
+            _, _, slave, parts = environ["PATH_INFO"].split("/", 3)
+            parts = parts.split("/")
+            headers = []
+            if parts[0] == "action":
+                if parts[1] == "reboot":
+                    if (slave, "reboot") not in self.pending:
+                        e = self.processor.add_work(slave, reboot)
+                        self.pending[(slave, "reboot")] = e
+                    else:
+                        e = self.pending[(slave, "reboot")]
+                    headers.append(("X-Pending", "True"))
 
             start_response("202 In queue", [])
-            yield ""
+            yield json.dumps([{"requestid": id(e)})
             return
 
         except:
-            log.exception("Can't figure out how to handle request: %s", environ["PATH_INFO"])
+            log.exception("Can't figure out how to handle POST request to %s", environ["PATH_INFO"])
             start_response("400 Bad Request", [])
             return
 
