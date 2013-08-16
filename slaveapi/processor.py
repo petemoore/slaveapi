@@ -3,20 +3,22 @@ import logging
 from gevent import queue, spawn
 from gevent.event import Event
 
-from .actions import reboot
+from . import messages
 
 log = logging.getLogger(__name__)
+
 
 class Processor(object):
     max_jobs = 20
 
-    def __init__(self, messages, concurrency):
-        self.messages = messages
-        self.concurrency = concurrency
-
+    def __init__(self):
+        self._message_loop = None
         self.stopped = False
         self.workers = []
         self.work_queue = queue.Queue()
+
+    def configure(self, concurrency):
+        self.concurrency = concurrency
 
     def add_work(self, slave, action, *args, **kwargs):
         e = Event()
@@ -55,7 +57,7 @@ class Processor(object):
                 slave, action, args, kwargs, e = item
                 action(slave, *args, **kwargs)
 
-                self.messages.put("done", item)
+                messages.put(("done", item))
 
                 # todo, bail after max jobs
                 if jobs >= self.max_jobs:
@@ -64,48 +66,7 @@ class Processor(object):
                 log.exception("Something went wrong while processing!")
                 if item:
                     log.exception("Item was: %s", item)
-                self.messages.put("error", item)
+                messages.put(("error", item))
             finally:
                 if e:
                     e.set()
-
-
-class SlaveAPIWSGIApp(object):
-    def __init__(self, concurrency=4):
-        self.pending = {}
-        self.messages = queue.Queue()
-
-        self.processor = Processor(self.messages, concurrency)
-        self._message_loop = spawn(self.process_messages)
-
-    def stop(self):
-        self._message_loop.kill()
-
-    def __call__(self, environ, start_response):
-        # /<slave>/...
-        try:
-            log.debug("Processing request: %s", environ["PATH_INFO"])
-            _, _, slave, parts = environ["PATH_INFO"].split("/", 3)
-            parts = parts.split('/')
-            if parts[0] == "action":
-                if parts[1] == "reboot":
-                    self.processor.add_work(slave, reboot)
-
-            start_response("202 In queue", [])
-            yield ""
-            return
-
-        except:
-            log.exception("Can't figure out how to handle request: %s", environ["PATH_INFO"])
-            start_response("400 Bad Request", [])
-            return
-
-    def process_messages(self):
-        while True:
-            msg = self.messages.get()
-            log.debug("Got message: %s", msg)
-            try:
-                # dispatch different message types based on msg[0]
-                pass
-            except:
-                log.exception("Failed to handle message: %s", msg)
