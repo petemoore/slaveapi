@@ -2,9 +2,9 @@ import logging
 from urlparse import parse_qs
 
 from gevent import queue, spawn
-from gevent.event import Event
 
 from . import messages
+from .status import ActionStatus
 
 log = logging.getLogger(__name__)
 
@@ -22,12 +22,12 @@ class Processor(object):
         self.concurrency = concurrency
 
     def add_work(self, slave, action, *args, **kwargs):
-        e = Event()
-        item = (slave, action, args, kwargs, e)
+        status = ActionStatus(slave, action.__name__)
+        item = (slave, action, args, kwargs, status)
         log.debug("Adding work to queue: %s", item)
         self.work_queue.put(item)
         self._start_worker()
-        return e
+        return status
 
     def _start_worker(self):
         if len(self.workers) < self.concurrency:
@@ -44,7 +44,6 @@ class Processor(object):
     def _worker(self):
         jobs = 0
         while True:
-            e = None
             try:
                 jobs += 1
                 try:
@@ -55,10 +54,10 @@ class Processor(object):
                     break
 
                 log.debug("Processing item: %s", item)
-                slave, action, args, kwargs, e = item
+                slave, action, args, kwargs, status = item
                 action(slave, *args, **kwargs)
 
-                messages.put(("done", item))
+                messages.put(("success", item))
 
                 # todo, bail after max jobs
                 if jobs >= self.max_jobs:
@@ -68,6 +67,3 @@ class Processor(object):
                 if item:
                     log.exception("Item was: %s", item)
                 messages.put(("error", item))
-            finally:
-                if e:
-                    e.set()
