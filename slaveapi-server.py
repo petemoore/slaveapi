@@ -8,9 +8,11 @@ from gevent.event import Event
 # Make ALL the things non-blocking.
 monkey.patch_all()
 
-from slaveapi import bugzilla_client, config
-from slaveapi.server import SlaveAPIWSGIApp
+from slaveapi import bugzilla_client, config, processor
+from slaveapi.messenger import Messenger
+from slaveapi.web import app
 
+config["concurrency"] = 4
 # Trailing slashes are important because urljoin sucks!
 config["slavealloc_api"] = "http://slavealloc.build.mozilla.org/api/"
 config["inventory_api"] = "https://inventory.mozilla.org/en-US/tasty/v3/"
@@ -35,8 +37,8 @@ bugzilla_client.configure(
     config["bugzilla_username"],
     config["bugzilla_password"],
 )
+processor.configure(config["concurrency"])
 
-app = SlaveAPIWSGIApp()
 listener = gevent.socket.socket()
 listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 listener.bind(("127.0.0.1", 9999))
@@ -52,8 +54,10 @@ class logger(object):
     def write(self, msg):
         log.info(msg)
 
+messenger = Messenger()
 server = pywsgi.WSGIServer(listener, app, log=logger())
 
 sighup_event = Event()
+gevent.spawn(messenger)
 gevent.spawn(server.serve_forever)
 sighup_event.wait()

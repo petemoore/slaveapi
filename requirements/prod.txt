@@ -3,3 +3,6 @@ requests==1.2.3
 bzrest==0.1
 dnspython==1.11.0
 paramiko==1.11.0
+flask==0.10.1
+werkzeug==0.9.3
+itsdangerous==0.23
