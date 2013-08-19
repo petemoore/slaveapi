@@ -3,7 +3,7 @@ class ActionResult(object):
         self.slave = slave
         self.action = action
         self._state = state
-        self._msg = ""
+        self._msg = "in progress"
 
     def __str__(self):
         return "Slave: %s; action: %s; state: %s; msg: %s" % (self.slave, self.action, self.state, self.msg)

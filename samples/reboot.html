@@ -5,7 +5,7 @@
 <script type="text/javascript" src="jquery-2.0.3.js"></script>
 <script type="text/javascript" src="reboot.js"></script>
 <body>
-<form onsubmit="reboot($('#slavename')); return false;">
+<form onsubmit="reboot($('#slavename').val()); return false;">
 <label for="slavename">Slave to reboot:</label>
 <input type="text" id="slavename">
 <input type="submit" value="Do it!">

@@ -32,4 +32,4 @@ class Reboot(MethodView):
         res = processor.add_work(slave, reboot)
         requestid = id(res)
         results[slave][reboot.__name__][requestid] = res
-        return make_response(json.dumps({"requestid": requestid}), 202)
+        return make_response(jsonify({"requestid": requestid}), 202)
