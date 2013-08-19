@@ -1,5 +1,4 @@
 import logging
-from urlparse import parse_qs
 
 from gevent import queue, spawn
 

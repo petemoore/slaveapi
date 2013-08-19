@@ -1,5 +1,5 @@
 class ActionStatus(object):
-    def __init__(self, state="pending")
+    def __init__(self, state="pending"):
         self.state = state
         self.result = ""
 

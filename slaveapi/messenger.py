@@ -1,6 +1,6 @@
 import logging
 
-from . import messages, status
+from . import messages
 
 log = logging.getLogger(__name__)
 
