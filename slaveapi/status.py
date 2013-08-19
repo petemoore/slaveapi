@@ -5,9 +5,6 @@ class ActionResult(object):
         self._state = state
         self._msg = "in progress"
 
-    def __str__(self):
-        return "Slave: %s; action: %s; state: %s; msg: %s" % (self.slave, self.action, self.state, self.msg)
-
     @property
     def state(self):
         return self._state
