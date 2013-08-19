@@ -13,6 +13,6 @@ class Messenger(object):
         while True:
             msg = messages.get()
             log.debug("Got message: %s", msg)
-            slave, action, args, kwargs, s = msg[1]
-            s.state = "complete"
-            s.result = msg[0]
+            slave, action, args, kwargs, res = msg[1]
+            res.state = "complete"
+            res.msg = msg[0]
