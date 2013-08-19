@@ -1,6 +1,6 @@
 import logging
 
-from flask import Response
+from flask import Response, make_response, jsonify, request
 from flask.views import MethodView
 
 from .. import pending, processor
@@ -11,18 +11,17 @@ log = logging.getLogger(__name__)
 
 class Reboot(MethodView):
     def get(self, slave):
-        id_  = (slave, reboot.__name__)
-        if id_ in pending:
-            return Response(status=202)
+        requestid = request.query_string.get("requestid")
+        if requestid and requestid in pending[slave]["reboot"]:
+            return Response(response="Request %d is pending" % requestid, status=202)
+        elif len(pending[slave]["reboot"]) > 0:
+            msg = "Pending reboots: %s" % pending[slave]["reboot"]
+            return Response(response=msg, status=202)
         else:
-            # return status of last reboot?
-            return Response(status=200)
+            return Response(response="No reboots pending", status=200)
 
     def post(self, slave):
-        id_ = (slave, "reboot")
-        if id_ not in pending:
-            e = processor.add_work(slave, reboot)
-            pending[id_] = e
-        else:
-            e = pending[id_]
-        return Response(status=202)
+        e = processor.add_work(slave, reboot)
+        requestid = id(e)
+        pending[slave]["reboot"].append(requestid)
+        return make_response(jsonify({"requestid": requestid}), status=202)
