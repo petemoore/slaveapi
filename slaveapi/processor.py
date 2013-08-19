@@ -3,7 +3,7 @@ import logging
 from gevent import queue, spawn
 
 from . import messages
-from .status import ActionStatus
+from .status import ActionResult
 
 log = logging.getLogger(__name__)
 
@@ -21,12 +21,12 @@ class Processor(object):
         self.concurrency = concurrency
 
     def add_work(self, slave, action, *args, **kwargs):
-        status = ActionStatus(slave, action.__name__)
-        item = (slave, action, args, kwargs, status)
+        res = ActionResult(slave, action.__name__)
+        item = (slave, action, args, kwargs, res)
         log.debug("Adding work to queue: %s", item)
         self.work_queue.put(item)
         self._start_worker()
-        return status
+        return res
 
     def _start_worker(self):
         if len(self.workers) < self.concurrency:
@@ -53,7 +53,7 @@ class Processor(object):
                     break
 
                 log.debug("Processing item: %s", item)
-                slave, action, args, kwargs, status = item
+                slave, action, args, kwargs, res = item
                 action(slave, *args, **kwargs)
 
                 messages.put(("success", item))

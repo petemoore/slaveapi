@@ -3,7 +3,7 @@ import logging
 from flask import Response, make_response, json, request, jsonify
 from flask.views import MethodView
 
-from .. import processor, status
+from .. import processor, results
 from ..actions import reboot
 
 log = logging.getLogger(__name__)
@@ -19,16 +19,17 @@ class Reboot(MethodView):
         except TypeError:
             return Response(response="Couldn't parse requestid", status=400)
 
-        s = status[slave][reboot.__name__].get(requestid, None)
-        if s:
-            return jsonify({"state": s.state, "result": s.result})
-        elif len(status[slave][reboot.__name__]) > 0:
-            return jsonify({"reboots": status[slave][reboot.__name__]})
+        res = results[slave][reboot.__name__].get(requestid, None)
+        if res:
+            return jsonify({"state": res.state, "msg": res.msg})
         else:
-            return Response(response="No reboots found", status=200)
+            reboots = {}
+            for id_, res in results[slave][reboot.__name__].iteritems():
+                reboots[id_] = {"state": res.state, "msg": res.msg}
+            return jsonify({"reboots": reboots})
 
     def post(self, slave):
-        s = processor.add_work(slave, reboot)
-        requestid = id(s)
-        status[slave][reboot.__name__].append(requestid)
+        res = processor.add_work(slave, reboot)
+        requestid = id(res)
+        results[slave][reboot.__name__][requestid] = res
         return make_response(json.dumps({"requestid": requestid}), 202)

@@ -8,7 +8,7 @@ messages = queue.Queue()
 
 config = {}
 bugzilla_client = BugzillaClient()
-status = defaultdict(lambda: defaultdict(list))
+results = defaultdict(lambda: defaultdict(dict))
 
 from .processor import Processor
 processor = Processor()
