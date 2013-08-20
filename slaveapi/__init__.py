@@ -12,3 +12,6 @@ results = defaultdict(lambda: defaultdict(dict))
 
 from .processor import Processor
 processor = Processor()
+
+from .messenger import Messenger
+messenger = Messenger()

@@ -1,63 +1,191 @@
-import logging
-import socket
+"""SlaveAPI Server.
 
+Usage:
+  slaveapi-server.py start (<config_file>)
+  slaveapi-server.py stop
+  slaveapi-server.py reload
+"""
+
+# Gevent patching needs to be done before importing anything else.
 import gevent
-from gevent import monkey, pywsgi
+from gevent import monkey, pywsgi, socket
 from gevent.event import Event
-
-# Make ALL the things non-blocking.
 monkey.patch_all()
 
-from slaveapi import bugzilla_client, config, processor
-from slaveapi.messenger import Messenger
+from ConfigParser import RawConfigParser, NoOptionError
+import json
+import logging
+from logging.handlers import RotatingFileHandler
+import os
+from signal import SIGHUP, SIGINT
+from socket import SOL_SOCKET, SO_REUSEADDR
+import sys
+
+import daemon
+
+from slaveapi import bugzilla_client, config, processor, messenger
 from slaveapi.web import app
 
-config["concurrency"] = 4
-# Trailing slashes are important because urljoin sucks!
-config["slavealloc_api"] = "http://slavealloc.build.mozilla.org/api/"
-config["inventory_api"] = "https://inventory.mozilla.org/en-US/tasty/v3/"
-config["inventory_username"] = "bhearsum@mozilla.com"
-config["bugzilla_api"] = "https://bugzilla-dev.allizom.org/rest/"
-config["bugzilla_product"] = "mozilla.org"
-config["bugzilla_component"] = "Release Engineering: Machine Management"
-config["bugzilla_username"] = "bhearsum@mozilla.com"
-config["default_domain"] = "build.mozilla.org"
-config["ssh_credentials_file"] = "credentials.json"
-config["ipmi_username"] = "releng"
+log = logging.getLogger(__name__)
 
-import json
-from getpass import getpass
-# TODO: test credentials at startup
-config["ssh_credentials"] = json.load(open(config["ssh_credentials_file"]))
-config["inventory_password"] = getpass("Inventory password: ")
-config["ipmi_password"] = getpass("IPMI Password: ")
-config["bugzilla_password"] = getpass("Bugzilla password: ")
-bugzilla_client.configure(
-    config["bugzilla_api"],
-    config["bugzilla_username"],
-    config["bugzilla_password"],
-)
-processor.configure(config["concurrency"])
-
-listener = gevent.socket.socket()
-listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-listener.bind(("127.0.0.1", 9999))
-listener.listen(256)
-
-logging.basicConfig(level=logging.DEBUG)
-log = logging.getLogger()
-logging.getLogger("paramiko").setLevel(logging.WARN)
-logging.getLogger("requests").setLevel(logging.WARN)
-logging.getLogger("bzrest").setLevel(logging.INFO)
 
 class logger(object):
     def write(self, msg):
         log.info(msg)
 
-messenger = Messenger()
-server = pywsgi.WSGIServer(listener, app, log=logger())
 
-sighup_event = Event()
-gevent.spawn(messenger)
-gevent.spawn(server.serve_forever)
-sighup_event.wait()
+def slashify(url):
+    if not url.endswith("/"):
+        url += "/"
+    return url
+
+def load_config(ini):
+    config["concurrency"] = ini.getint("server", "concurrency")
+    # Trailing slashes are important on URLs because urljoin sucks.
+    config["slavealloc_api"] = slashify(ini.get("slavealloc", "api_url"))
+    config["inventory_api"] = slashify(ini.get("inventory", "api_url"))
+    config["inventory_username"] = ini.get("inventory", "username")
+    config["bugzilla_api"] = slashify(ini.get("bugzilla", "api_url"))
+    config["bugzilla_username"] = ini.get("bugzilla", "username")
+    config["default_domain"] = ini.get("slaves", "default_domain")
+    config["ipmi_username"] = ini.get("slaves", "ipmi_username")
+
+def load_credentials(credentials):
+    config["ssh_credentials"] = credentials["ssh"]
+    config["inventory_password"] = credentials["inventory"]
+    config["bugzilla_password"] = credentials["bugzilla"]
+    config["ipmi_password"] = credentials["ipmi"]
+
+def setup_logging(level, logfile=None, maxsize=None, maxfiles=None):
+    # Quiet down some of the libraries that we use.
+    logging.getLogger("paramiko").setLevel(logging.WARN)
+    logging.getLogger("requests").setLevel(logging.WARN)
+    logging.getLogger("bzrest").setLevel(logging.INFO)
+
+    if logfile:
+        handler = RotatingFileHandler(logfile, maxBytes=maxsize, backupCount=maxfiles)
+    else:
+        handler = logging.StreamHandler()
+
+    logger = logging.getLogger()
+    logger.addHandler(handler)
+    logger.setLevel(loglevel)
+
+def run(config_file):
+    log.info("Running with pid %i", os.getpid())
+    server = None
+    listener = None
+    handler = None
+
+    while True:
+        ini = RawConfigParser()
+        ini.read(args["<config_file>"])
+        load_config(ini)
+
+        credentials_file = ini.get("secrets", "credentials_file")
+        credentials = json.load(open(credentials_file))
+        load_credentials(credentials)
+        # TODO: test credentials at startup
+
+        listen = ini.get("server", "listen")
+        port = ini.getint("server", "port")
+
+        bugzilla_client.configure(
+            config["bugzilla_api"],
+            config["bugzilla_username"],
+            config["bugzilla_password"],
+        )
+        processor.configure(config["concurrency"])
+        gevent.spawn(messenger)
+
+        if not listener or (listen, port) != listener.getsockname():
+            if listener and server:
+                log.info("Listener has changed, stopping old server")
+                log.debug("Old address: %s", listener.getsockname())
+                log.debug("New address: %s", (listen, port))
+                server.stop()
+            listener = socket.socket()
+            listener.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)
+            listener.bind((listen, port))
+            listener.listen(256)
+
+        server = pywsgi.WSGIServer(listener, app, log=logger())
+
+        sighup_event = Event()
+        h = gevent.signal(SIGHUP, lambda e: e.set(), sighup_event)
+        if handler:
+            handler.cancel()
+        handler = h
+        log.info("Running at %s", repr(server))
+        try:
+            gevent.spawn(server.serve_forever)
+            sighup_event.wait()
+        except KeyboardInterrupt:
+            break
+    log.info("pid %i exited normally", os.getpid())
+
+
+if __name__ == "__main__":
+    from docopt import docopt
+    args = docopt(__doc__)
+
+    pidfile = os.path.abspath("slaveapi.pid")
+
+    if args["stop"]:
+        try:
+            pid = int(open(pidfile).read())
+            os.kill(pid, SIGINT)
+        except (IOError, ValueError):
+            log.info("No pidfile, assuming process is stopped.")
+        sys.exit(0)
+    elif args["reload"]:
+        pid = int(open(pidfile).read())
+        os.kill(pid, SIGHUP)
+        sys.exit(0)
+    elif args["start"]:
+        config_ini = RawConfigParser()
+        config_ini.read(args["<config_file>"])
+
+        daemonize = config_ini.getboolean("server", "daemonize")
+        loglevel = config_ini.get("logging", "level")
+        try:
+            logfile = os.path.abspath(config_ini.get("logging", "file"))
+        except NoOptionError:
+            logfile = None
+        if logfile:
+            logsize = config_ini.getint("logging", "maxsize")
+            log_maxfiles = config_ini.get("logging", "maxfiles")
+        else:
+            logsize = None
+            log_maxfiles = None
+        setup_logging(loglevel, logfile, logsize, log_maxfiles)
+
+        curdir = os.path.abspath(os.curdir)
+        if daemonize:
+            daemon_ctx = daemon.DaemonContext(signal_map={}, working_directory=curdir, umask=0o077)
+            daemon_ctx.open()
+
+            gevent.reinit()
+            open(pidfile, "w").write(str(os.getpid()))
+
+            setup_logging(loglevel, logfile, logsize, log_maxfiles)
+
+        try:
+            run(args["<config_file>"])
+        except:
+            log.exception("Couldn't run server.")
+            raise
+        finally:
+            try:
+                if daemonize:
+                    daemon_ctx.close()
+                try:
+                    os.unlink(pidfile)
+                except OSError, e:
+                    if e.errno == 2:
+                        pass
+                    else:
+                        raise
+                log.info("Exiting")
+            except:
+                log.exception("Error shutting down.")

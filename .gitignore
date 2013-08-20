@@ -31,3 +31,5 @@ nosetests.xml
 .pydevproject
 
 credentials.json
+*.log
+*.pid
