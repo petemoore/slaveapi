@@ -22,9 +22,9 @@ import site
 from socket import SOL_SOCKET, SO_REUSEADDR
 import sys
 
-import daemon
-
 site.addsitedir(os.path.join(os.path.dirname(__file__), "vendor/lib/python"))
+
+import daemon
 
 from slaveapi import bugzilla_client, config, processor, messenger
 from slaveapi.web import app
