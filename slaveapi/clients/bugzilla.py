@@ -19,7 +19,9 @@ class Bug(object):
 
     def reopen(self, comment):
         data = {
-            "comment": comment,
+            "comment": {
+                "body": comment,
+            },
             "status": "REOPENED",
         }
         bugzilla_client.update_bug(self.id_, data)
