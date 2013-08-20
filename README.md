@@ -1,7 +1,8 @@
 slaveapi
 ========
 
-How to add new endpoints:
+How to add new endpoints
+------------------------
 * Create a new action in slaveapi/actions. Your action can make use of any of the clients in slaveapi/clients if desired/helpful.
 * Create a new endpoint that makes use of your action.
 ** Actions that generally take more than a short amount of time to run should be pushed onto the work queue. Actions that are generally quick may wait on a result before returning. slaveapi/web/slave.py has examples of both.
