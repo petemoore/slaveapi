@@ -42,7 +42,12 @@ def reboot(name):
         bug_comment += "Success!"
         slave.bug.add_comment(bug_comment)
     else:
-        # TODO: Get IT involved - reboot bug
+        # We've done all we can - now we need human involvement to get the
+        # machine back online.
+        reboot_bug = slave.get_reboot_bug()
         bug_comment += "Failed.\n"
         bug_comment += "Can't do anything else, human intervention needed."
-        slave.bug.reopen(bug_comment)
+        data = {
+            "depends_on": slave.bug.data.depends_on + [reboot_bug.id_]
+        }
+        slave.bug.add_comment(bug_comment, data)

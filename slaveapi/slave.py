@@ -9,7 +9,7 @@ from paramiko import SSHException
 
 from . import config
 from .clients import inventory, slavealloc
-from .clients.bugzilla import ProblemTrackingBug
+from .clients.bugzilla import ProblemTrackingBug, RebootBug
 from .clients.ipmi import IPMIInterface
 from .clients.pdu import PDU
 from .clients.ssh import SSHConsole
@@ -73,13 +73,24 @@ class Slave(object):
         except BugzillaAPIError as e:
             if e.bugzilla_code in (INVALID_ALIAS, INVALID_BUG) and createIfMissing:
                 log.info("Couldn't find bug for %s, creating it...", self.name)
-                self.bug.create(config["bugzilla_product"], config["bugzilla_component"])
+                self.bug.create()
             else:
                 raise
 
     def ssh_reboot(self):
         console = self._get_console()
         console.reboot()
+
+    def get_reboot_bug(self):
+        current_reboot_bug = RebootBug(self.colo)
+        # if it's open, attach slave to it
+        if current_reboot_bug.data["is_open"]:
+            return current_reboot_bug
+        else:
+            current_reboot_bug.update({"alias": None})
+            new_reboot_bug = RebootBug(self.colo, loadInfo=False)
+            new_reboot_bug.create()
+            return new_reboot_bug
 
     def is_alive(self, timeout=300, retry_interval=5):
         log.info("Waiting up to %d seconds for slave to revive", timeout)

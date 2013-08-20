@@ -4,42 +4,32 @@ from slaveapi import bugzilla_client
 class Bug(object):
     def __init__(self, id_, loadInfo=True):
         self.id_ = id_
-        self.depends = []
+        self.data = {}
         if loadInfo:
             self.load()
 
     def load(self):
-        data = bugzilla_client.get_bug(self.id_)
-        if data:
-            self.depends = data.get("depends_on", [])
-        return data
+        self.data = bugzilla_client.get_bug(self.id_)
 
-    def add_comment(self, comment):
-        bugzilla_client.add_comment(self.id_, comment)
+    def add_comment(self, comment, data={}):
+        return bugzilla_client.add_comment(self.id_, comment, data)
 
-    def reopen(self, comment):
-        data = {
-            "comment": comment,
-            "status": "REOPENED",
-        }
-        bugzilla_client.update_bug(self.id_, data)
+    def update(self, data):
+        return bugzilla_client.update_bug(self.id_, data)
 
 
 class ProblemTrackingBug(Bug):
-    def __init__(self, slave_name, loadInfo=True):
+    product = "Release Engineering"
+    component = "Buildduty"
+
+    def __init__(self, slave_name, *args, **kwargs):
         self.slave_name = slave_name
-        self.machine_state = None
-        Bug.__init__(self, id_=slave_name, loadInfo=loadInfo)
-        # XXX: should the reboots bug be owned by this? maybe it should be owned by a Slave object instead? where does the method that adds the slave to it go? probably on RebootsBug?
+        Bug.__init__(self, slave_name, *args, **kwargs)
 
-    def load(self):
-        data = Bug.load(self)
-        self.machine_state = data.get("machine-state", None)
-
-    def create(self, product, component):
+    def create(self):
         data = {
-            "product": product,
-            "component": component,
+            "product": self.product,
+            "component": self.component,
             "summary": "%s problem tracking" % self.slave_name,
             "version": "other",
             "alias": self.slave_name,
@@ -51,11 +41,23 @@ class ProblemTrackingBug(Bug):
         self.id_ = resp["id"]
 
 
-class RebootsBug(Bug):
-    def __init__(self, datacentre, loadInfo=True):
-        self.datacentre = datacentre
-        Bug.__init__(self, id_datacentre, loadInfo=loadInfo)
+class RebootBug(Bug):
+    product = "mozilla.org"
+    component = "Server Operations: DCOps"
 
-    def load(self):
-        data = Bug.load(self)
-        # XXX: should we move bug creation back into here for this and problem tracking bugs? we need to create the reboots bug if a) the alias doesn't exist, b) if it exists and is closed
+    def __init__(self, colo, *args, **kwargs):
+        self.colo = colo
+        Bug.__init__(self, "reboots-%s" % colo, *args, **kwargs)
+
+    def create(self):
+        data = {
+            "product": self.product,
+            "component": self.component,
+            "summary": "reboot requests for %s" % self.colo,
+            "version": "other",
+            "alias": "reboots-%s" % self.colo,
+            "op_sys": "All",
+            "platform": "All",
+        }
+        resp = bugzilla_client.create_bug(data)
+        self.id_ = resp["id"]
