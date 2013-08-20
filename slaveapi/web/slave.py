@@ -1,10 +1,10 @@
 import logging
 
-from flask import Response, make_response, json, request, jsonify
+from flask import Response, make_response, request, jsonify
 from flask.views import MethodView
 
 from .. import processor, results
-from ..actions import reboot
+from ..actions.reboot import reboot
 
 log = logging.getLogger(__name__)
 

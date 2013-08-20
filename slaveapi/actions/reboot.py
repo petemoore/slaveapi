@@ -1,6 +1,6 @@
 import time
 
-from .slave import Slave
+from ..slave import Slave
 
 import logging
 log = logging.getLogger(__name__)
