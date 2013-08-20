@@ -30,6 +30,13 @@ class Reboot(MethodView):
 
     def post(self, slave):
         res = processor.add_work(slave, reboot)
-        requestid = id(res)
-        results[slave][reboot.__name__][requestid] = res
-        return make_response(jsonify({"requestid": requestid}), 202)
+        results[slave][reboot.__name__][res.id_] = res
+
+        # Wait for the action to complete if requested.
+        waittime = int(request.form.get("waittime", 0))
+        res.wait(waittime)
+        data = {"state": res.state, "msg": res.msg, "requestid": res.id_}
+        if res.is_done():
+            return jsonify(data)
+        else:
+            return make_response(jsonify(data), 202)

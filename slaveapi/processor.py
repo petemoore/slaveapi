@@ -54,6 +54,7 @@ class Processor(object):
 
                 log.debug("Processing item: %s", item)
                 slave, action, args, kwargs, res = item
+                res.state = "running"
                 action(slave, *args, **kwargs)
 
                 messages.put(("success", item))
