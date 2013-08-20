@@ -48,6 +48,8 @@ def reboot(name):
         bug_comment += "Failed.\n"
         bug_comment += "Can't do anything else, human intervention needed."
         data = {
-            "depends_on": slave.bug.data.depends_on + [reboot_bug.id_]
+            "depends_on": {
+                "add": [reboot_bug.id_],
+            }
         }
         slave.bug.add_comment(bug_comment, data)
