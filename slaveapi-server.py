@@ -23,7 +23,7 @@ import sys
 
 import daemon
 
-from slaveapi import bugzilla_client, config, processor
+from slaveapi import bugzilla_client, config, processor, messenger
 from slaveapi.web import app
 
 log = logging.getLogger(__name__)
@@ -96,6 +96,7 @@ def run(config_file):
             config["bugzilla_password"],
         )
         processor.configure(config["concurrency"])
+        gevent.spawn(messenger)
 
         if not listener or (listen, port) != listener.getsockname():
             if listener and server:
