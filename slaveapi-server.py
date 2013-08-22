@@ -166,13 +166,13 @@ if __name__ == "__main__":
 
         curdir = os.path.abspath(os.curdir)
         if daemonize:
-            daemon_ctx = daemon.DaemonContext(signal_map={}, working_directory=curdir, umask=0o077)
+            daemon_ctx = daemon.DaemonContext(signal_map={}, working_directory=curdir, umask=0o077, files_preserve=range(4096))
             daemon_ctx.open()
 
             gevent.reinit()
             open(pidfile, "w").write(str(os.getpid()))
 
-            setup_logging(loglevel, logfile, logsize, log_maxfiles)
+            #setup_logging(loglevel, logfile, logsize, log_maxfiles)
 
         try:
             run(args["<config_file>"])
