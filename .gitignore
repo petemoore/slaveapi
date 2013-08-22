@@ -33,3 +33,4 @@ nosetests.xml
 credentials.json
 *.log
 *.pid
+*.ini
