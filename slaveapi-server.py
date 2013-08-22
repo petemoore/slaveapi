@@ -7,10 +7,11 @@ Usage:
 """
 
 # Gevent patching needs to be done before importing anything else.
-import gevent
-from gevent import monkey, pywsgi, socket
-from gevent.event import Event
+from gevent import monkey
 monkey.patch_all()
+import gevent, gevent.core
+from gevent import pywsgi, socket
+from gevent.event import Event
 
 from ConfigParser import RawConfigParser, NoOptionError
 import json
@@ -165,13 +166,15 @@ if __name__ == "__main__":
 
         curdir = os.path.abspath(os.curdir)
         if daemonize:
-            daemon_ctx = daemon.DaemonContext(signal_map={}, working_directory=curdir, umask=0o077)
+            daemon_ctx = daemon.DaemonContext(signal_map={}, working_directory=curdir, umask=0o077, files_preserve=range(4096))
             daemon_ctx.open()
 
             gevent.reinit()
+            gevent.core.dns_shutdown(fail_requests=1)
+            gevent.core.dns_init()
             open(pidfile, "w").write(str(os.getpid()))
 
-            setup_logging(loglevel, logfile, logsize, log_maxfiles)
+            #setup_logging(loglevel, logfile, logsize, log_maxfiles)
 
         try:
             run(args["<config_file>"])
