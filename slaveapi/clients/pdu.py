@@ -23,21 +23,21 @@ class PDU(object):
         self.fqdn = fqdn
         self.tower, self.infeed, self.outlet = self._parse_port(port)
 
-    def off(self):
-        self.run_cmd(self.off_cmd)
+    def poweroff(self):
+        self._run_cmd(self.off_cmd)
 
-    def on(self):
-        self.run_cmd(self.on_cmd)
+    def poweron(self):
+        self._run_cmd(self.on_cmd)
 
     def powercycle(self, delay=5):
         log.info("Powercycling %s via PDU.", self.fqdn)
-        self.off()
+        self.poweroff()
         log.debug("Power is off, waiting %d seconds before turning it back on.", delay)
         time.sleep(delay)
-        self.on()
+        self.poweron()
         log.info("Powercycle of %s completed.", self.fqdn)
 
-    def run_cmd(self, cmd):
+    def _run_cmd(self, cmd):
         oid = "%s.%s.%s.%s" % (self.base_oid, self.tower, self.infeed, self.outlet)
         full_cmd = ["snmpset", "-v", self.snmp_protocol_version,
                     "-c", self.snmp_community, self.fqdn, oid]

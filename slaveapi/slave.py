@@ -62,7 +62,7 @@ class Slave(object):
             resolver.query(mgmt_fqdn)
             # This will return None if the IPMI interface doesn't work for some
             # reason.
-            self.mgmt = IPMIInterface.get(mgmt_fqdn, config["ipmi_username"], config["ipmi_password"])
+            self.mgmt = IPMIInterface.get_if_exists(mgmt_fqdn, config["ipmi_username"], config["ipmi_password"])
         except resolver.NXDOMAIN:
             # IPMI Interface doesn't exist.
             pass

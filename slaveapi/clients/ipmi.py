@@ -15,7 +15,7 @@ class IPMIInterface(object):
         self.password = password
 
     @classmethod
-    def get(cls, fqdn, username, password):
+    def get_if_exists(cls, fqdn, username, password):
         # If this doesn't raise we can safely assume that "fqdn" has a
         # working IPMI interface.
         interface = cls(fqdn, username, password)
@@ -25,24 +25,24 @@ class IPMIInterface(object):
         except CalledProcessError:
             return None
 
-    def off(self, hard=False):
+    def poweroff(self, hard=False):
         if hard:
             self.run_cmd("power off")
         else:
             self.run_cmd("power soft")
 
-    def on(self):
+    def poweron(self):
         self.run_cmd("power on")
 
     def powercycle(self, delay=5):
         log.info("Powercycling %s", self.fqdn)
         log.debug("Trying soft shutdown.")
-        self.off(hard=False)
+        self.poweroff(hard=False)
         if self.wait_for_off():
             log.debug("Soft shutdown succeeded.")
         else:
             log.debug("Soft shutdown failed, trying a hard shutdown.")
-            self.off(hard=True)
+            self.poweroff(hard=True)
             if self.wait_for_off():
                 log.debug("Hard shutdown succeeded.")
             else:
@@ -50,7 +50,7 @@ class IPMIInterface(object):
         log.debug("Waiting %d seconds before powering on.", delay)
         time.sleep(delay)
         log.debug("Turning machine back on.")
-        self.on()
+        self.poweron()
         log.info("Powercycle of %s completed.", self.fqdn)
 
     def wait_for_off(self, wait=120):

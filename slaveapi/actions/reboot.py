@@ -1,5 +1,3 @@
-import time
-
 from ..slave import Slave
 
 import logging
