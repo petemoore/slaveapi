@@ -9,7 +9,7 @@ def ping(host, count=4, deadline=None):
        a reply and False otherwise."""
     cmd = ["ping", "-c", str(count)]
     if deadline:
-        cmd += ["-w", str(deadline)]
+        cmd += ["-w", str(deadline), "-W", str(deadline)]
     cmd += [host]
     try:
         output = check_output(cmd, stderr=STDOUT)
