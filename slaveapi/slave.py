@@ -115,7 +115,7 @@ class Slave(object):
         # First, wait for the slave to go down.
         time_left = down_timeout
         while time_left <= down_timeout:
-            if not self.is_alive(timeout=4):
+            if not self.is_alive(timeout=2):
                 log.debug("Slave is confirmed to be down, waiting for revival.")
                 break
         else:
