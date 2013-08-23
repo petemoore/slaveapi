@@ -124,7 +124,7 @@ class SSHConsole(object):
             if rc == 0:
                 log.info("Successfully initiated reboot of %s", self.fqdn)
                 # Success! We're done!
-                break
+                return
         else:
             # XXX: raise a better exception here
             raise Exception("Unable to reboot %s" % self.fqdn)
