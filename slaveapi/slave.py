@@ -111,13 +111,14 @@ class Slave(object):
                 time_left -= retry_interval
                 
     def wait_for_reboot(self, alive_timeout=300, down_timeout=60):
-        log.info("Waiting for %s to come back from reboot.", self.name)
+        log.info("Waiting for %s to reboot.", self.name)
         # First, wait for the slave to go down.
         time_left = down_timeout
         while time_left <= down_timeout:
             if not ping(self.ip, count=1, deadline=2):
                 log.debug("Slave is confirmed to be down, waiting for revival.")
                 break
+            time_left -= 2
         else:
             log.error("Slave didn't go down in allotted time, assuming it didn't reboot.")
             return False
