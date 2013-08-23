@@ -17,7 +17,7 @@ class SSHConsole(object):
     # hyphens because it gets run through a bash shell. We also delay the
     # shutdown for a few seconds so that we have time to read the exit status
     # of the shutdown command.
-    reboot_commands = ["sudo reboot", "reboot", "shutdown -f -t 3 -r"]
+    reboot_command = "shutdown -r 3 || sudo shutdown -r 3 || shutdown -f -t 3 -r"
 
     def __init__(self, fqdn, credentials):
         self.fqdn = fqdn
@@ -26,9 +26,16 @@ class SSHConsole(object):
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(IgnorePolicy())
 
-    def connect(self, timeout=30):
+    def connect(self, usernames=None, timeout=30):
         last_exc = None
-        for username, passwords in self.credentials.iteritems():
+        if usernames:
+            possible_credentials = {}
+            for u in usernames:
+                possible_credentials[u] = self.credentials[u]
+        else:
+            possible_credentials = self.crendentials
+        for username, passwords in possible_credentials:
+            first_password = True
             for p in passwords:
                 try:
                     log.info("Attempting to connect to %s as %s", self.fqdn, username)
@@ -41,6 +48,9 @@ class SSHConsole(object):
                 # we ultimately fail.
                 except AuthenticationException, e:
                     log.info("Authentication failure.")
+                    if first_password:
+                        log.warning("First password for %s@%s didn't work.", username, self.fqdn)
+                        first_password = False
                     last_exc = e
         if not self.connected:
             raise last_exc
@@ -109,17 +119,12 @@ class SSHConsole(object):
     def reboot(self):
         log.info("Attempting to reboot %s", self.fqdn)
 
-        for cmd in self.reboot_commands:
-            log.debug("Trying command: %s", cmd)
-            rc, output = self.run_cmd(cmd)
-            if rc == 0:
-                log.info("Successfully initiated reboot of %s", self.fqdn)
-                # Success! We're done!
-                break
-            else:
-                log.info("Reboot failed, rc was %d, output was:", rc)
-                log.info(output)
+        rc, output = self.run_cmd(self.reboot_command)
+        if rc == 0:
+            log.info("Successfully initiated reboot of %s", self.fqdn)
+            return True
         else:
+            # XXX: raise a better exception here
             raise Exception("Unable to reboot %s" % self.fqdn)
 
     def _get_shell(self):
