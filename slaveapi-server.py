@@ -26,6 +26,7 @@ import sys
 site.addsitedir(os.path.join(os.path.dirname(__file__), "vendor/lib/python"))
 
 import daemon
+from daemon.daemon import get_maximum_file_descriptors
 
 from slaveapi import bugzilla_client, config, processor, messenger
 from slaveapi.web import app
@@ -166,13 +167,15 @@ if __name__ == "__main__":
 
         curdir = os.path.abspath(os.curdir)
         if daemonize:
-            daemon_ctx = daemon.DaemonContext(signal_map={}, working_directory=curdir, umask=0o077, files_preserve=range(4096))
+            # Gevent 0.13 + daemonization breaks DNS resolution (https://github.com/surfly/gevent/issues/2)
+            # A workaround for this is to not close the open file descriptors
+            # when daemonizing.
+            maxfd = get_maximum_file_descriptors()
+            daemon_ctx = daemon.DaemonContext(signal_map={}, working_directory=curdir, umask=0o077, files_preserve=range(maxfd+2))
             daemon_ctx.open()
 
             gevent.reinit()
             open(pidfile, "w").write(str(os.getpid()))
-
-            #setup_logging(loglevel, logfile, logsize, log_maxfiles)
 
         try:
             run(args["<config_file>"])
