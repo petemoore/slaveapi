@@ -1,17 +1,15 @@
-import socket
 import time
 
 from bzrest.errors import BugzillaAPIError, INVALID_ALIAS, INVALID_BUG
 
 from dns import resolver
 
-from paramiko import SSHException
-
 from . import config
 from .clients import inventory, slavealloc
 from .clients.bugzilla import ProblemTrackingBug, RebootBug
 from .clients.ipmi import IPMIInterface
 from .clients.pdu import PDU
+from .clients.ping import ping
 from .clients.ssh import SSHConsole
 
 import logging
@@ -97,25 +95,35 @@ class Slave(object):
             return new_reboot_bug
 
     def is_alive(self, timeout=300, retry_interval=5):
-        log.info("Waiting up to %d seconds for slave to revive", timeout)
+        log.info("Checking for signs of life on %s.", self.name)
         time_left = timeout
-        console = self._get_console()
         while time_left > 0:
-            try:
-                console.connect(time_left)
-                log.info("Slave is alive!")
+            time_left -= 10
+            if ping(self.ip, deadline=10):
+                log.debug("Slave is alive.")
                 return True
-            # Exceptions are especially common if a connection attempt
-            # happens mid-shutdown. They can also be caused by transient host
-            # or network issue.
-            except (socket.error, SSHException):
-                # We should sleep between retries to avoid spamming the host.
-                log.debug("Got connection error, sleeping %d before retrying", retry_interval)
+            else:
+                log.debug("Slave isn't alive yet.")
+                if time_left <= 0:
+                    log.error("Timeout exceeded, giving up.")
+                    return False
                 time.sleep(retry_interval)
                 time_left -= retry_interval
-                if time_left <= 0:
-                    log.exception("Timeout exceeded, giving up.")
-                    return False
+                
+    def wait_for_reboot(self, alive_timeout=300, down_timeout=60):
+        log.info("Waiting for %s to come back from reboot.", self.name)
+        # First, wait for the slave to go down.
+        time_left = down_timeout
+        while time_left <= down_timeout:
+            if not self.is_alive(timeout=10, retry_interval=2):
+                log.debug("Slave is confirmed to be down, waiting for revival.")
+                break
+        else:
+            log.error("Slave didn't go down in allotted time, assuming it didn't reboot.")
+            return False
+
+        # Then wait for it come back up.
+        return self.is_alive(timeout=alive_timeout)
 
     def _get_console(self):
         return SSHConsole(self.fqdn, config["ssh_credentials"])

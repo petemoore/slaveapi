@@ -20,7 +20,7 @@ def reboot(name):
         # Wait a few seconds before checking for aliveness, because the slave may
         # still accept connections directly after asking for the reboot.
         time.sleep(3)
-        alive = slave.is_alive()
+        alive = slave.wait_for_reboot()
     except:
         log.exception("Caught exception.")
 
@@ -29,7 +29,7 @@ def reboot(name):
         bug_comment += "Failed.\n"
         bug_comment += "Attempting management interface reboot..."
         slave.mgmt.powercycle()
-        alive = slave.is_alive()
+        alive = slave.wait_for_reboot()
 
     # Is mgmt interface _and_ PDU a valid configuration?
     # Mayhaps a PDU reboot?
@@ -37,7 +37,7 @@ def reboot(name):
         bug_comment += "Failed.\n"
         bug_comment += "Attempting PDU reboot..."
         slave.pdu.powercycle()
-        alive = slave.is_alive()
+        alive = slave.wait_for_reboot()
 
     if alive:
         bug_comment += "Success!"
