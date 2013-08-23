@@ -4,7 +4,7 @@ from urlparse import urljoin
 
 import requests
 
-from .errors import BugzillaAPIError
+from .errors import BugzillaAPIError, BugNotFound, INVALID_ALIAS, INVALID_BUG
 
 log = logging.getLogger(__name__)
 
@@ -45,7 +45,10 @@ class BugzillaClient(object):
         log.info("Got response: %s", r.status_code)
         log.debug("Response body: %s", resp)
         if resp.get("error", False):
-            raise BugzillaAPIError(resp["code"], resp["message"], response=resp)
+            if resp["code"] in (INVALID_ALIAS, INVALID_BUG):
+                raise BugNotFound()
+            else:
+                raise BugzillaAPIError(resp["code"], resp["message"], response=resp)
         return resp
 
     def create_bug(self, data):
