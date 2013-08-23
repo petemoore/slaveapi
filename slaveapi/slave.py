@@ -29,16 +29,7 @@ class Slave(object):
         # Per IT, parsing the FQDN is the best way to find the colo.
         # Our hostnames always end in $colo.mozilla.com.
         self.colo = self.fqdn.split(".")[-3]
-        # Also per IT, the management interface (eg, IPMI), if it exists, can
-        # always be found by appending "-mgmt.build.mozilla.org" to the name.
-        try:
-            mgmt_fqdn = "%s-mgmt.%s" % (self.name, config["default_domain"])
-            resolver.query(mgmt_fqdn)
-            # This will return None if the IPMI interface doesn't work for some
-            # reason.
-            self.mgmt = IPMIInterface.get(mgmt_fqdn, config["ipmi_username"], config["ipmi_password"])
-        except resolver.NXDOMAIN:
-            self.mgmt = None
+        self.mgmt = None
         self.bug = None
         self.enabled = None
         self.basedir = None
@@ -64,6 +55,19 @@ class Slave(object):
         )
         if debug["pdu_fqdn"]:
             self.pdu = PDU(debug["pdu_fqdn"], debug["pdu_port"])
+
+    def load_ipmi_info(self):
+        # Also per IT, the management interface (eg, IPMI), if it exists, can
+        # always be found by appending "-mgmt.build.mozilla.org" to the name.
+        try:
+            mgmt_fqdn = "%s-mgmt.%s" % (self.name, config["default_domain"])
+            resolver.query(mgmt_fqdn)
+            # This will return None if the IPMI interface doesn't work for some
+            # reason.
+            self.mgmt = IPMIInterface.get(mgmt_fqdn, config["ipmi_username"], config["ipmi_password"])
+        except resolver.NXDOMAIN:
+            # IPMI Interface doesn't exist.
+            pass
 
     def load_bug_info(self, createIfMissing=False):
         log.info("Getting bug debug for %s", self.name)

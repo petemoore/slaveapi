@@ -9,6 +9,7 @@ def reboot(name):
     bug_comment = ""
     slave = Slave(name)
     slave.load_inventory_info()
+    slave.load_ipmi_info()
     slave.load_bug_info(createIfMissing=True)
     bug_comment += "Attempting SSH reboot..."
 
