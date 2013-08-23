@@ -115,7 +115,6 @@ class Slave(object):
         # First, wait for the slave to go down.
         if not ping(count=down_timeout-10, deadline=down_timeout):
             log.debug("Slave is confirmed to be down, waiting for revival.")
-            break
         else:
             log.error("Slave didn't go down in allotted time, assuming it didn't reboot.")
             return False
