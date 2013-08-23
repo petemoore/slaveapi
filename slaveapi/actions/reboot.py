@@ -17,9 +17,6 @@ def reboot(name):
     # Try an SSH reboot first of all...
     try:
         slave.ssh_reboot()
-        # Wait a few seconds before checking for aliveness, because the slave may
-        # still accept connections directly after asking for the reboot.
-        time.sleep(3)
         alive = slave.wait_for_reboot()
     except:
         log.exception("Caught exception.")
