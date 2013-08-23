@@ -17,6 +17,6 @@ def ping(host, count=4, deadline=None):
         output = e.output
     log.debug("Ping output:")
     log.debug(output)
-    if "0% packet loss" in output:
+    if " 0% packet loss" in output:
         return True
     return False
