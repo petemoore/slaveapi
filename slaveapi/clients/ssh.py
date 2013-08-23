@@ -34,7 +34,7 @@ class SSHConsole(object):
                 possible_credentials[u] = self.credentials[u]
         else:
             possible_credentials = self.credentials
-        for username, passwords in possible_credentials:
+        for username, passwords in possible_credentials.iteritems():
             first_password = True
             for p in passwords:
                 try:
