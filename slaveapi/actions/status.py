@@ -1,12 +1,14 @@
 from gevent.event import Event
 
+PENDING, RUNNING, SUCCESS, FAILURE = range(4)
+
 class ActionResult(object):
-    def __init__(self, slave, action, state="pending"):
+    def __init__(self, slave, action, state=PENDING):
         self.id_ = id(self)
         self.slave = slave
         self.action = action
         self._state = state
-        self._msg = "in progress"
+        self._text = ""
         self.event = Event()
 
     @property
@@ -15,17 +17,19 @@ class ActionResult(object):
 
     @state.setter
     def state(self, state):
+        if state not in (PENDING, RUNNING, SUCCESS, FAILURE):
+            raise ValueError("Invalid state: %s" % state)
         self._state = state
-        if state == "complete":
+        if state in (SUCCESS, FAILURE):
             self.event.set()
 
     @property
-    def msg(self):
-        return self._msg
+    def text(self):
+        return self._text
 
-    @msg.setter
-    def msg(self, msg):
-        self._msg = msg
+    @text.setter
+    def text(self, text):
+        self._text = text
 
     def is_done(self):
         if self.event.isSet():

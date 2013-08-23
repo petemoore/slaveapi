@@ -11,8 +11,8 @@ class Messenger(object):
 
     def __call__(self):
         while True:
-            msg = messages.get()
-            log.debug("Got message: %s", msg)
-            slave, action, args, kwargs, res = msg[1]
-            res.state = "complete"
-            res.msg = msg[0]
+            state, item, text = messages.get()
+            log.debug("Got message: %s", (state, item, text))
+            slave, action, args, kwargs, res = item
+            res.state = state
+            res.text = text

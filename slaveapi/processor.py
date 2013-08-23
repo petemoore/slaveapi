@@ -3,7 +3,7 @@ import logging
 from gevent import queue, spawn
 
 from . import messages
-from .actions.status import ActionResult
+from .actions.status import ActionResult, RUNNING, SUCCESS, FAILURE
 
 log = logging.getLogger(__name__)
 
@@ -54,16 +54,16 @@ class Processor(object):
 
                 log.debug("Processing item: %s", item)
                 slave, action, args, kwargs, res = item
-                res.state = "running"
+                messages.put((RUNNING, item))
                 action(slave, *args, **kwargs)
 
-                messages.put(("success", item))
+                messages.put((SUCCESS, item))
 
                 # todo, bail after max jobs
                 if jobs >= self.max_jobs:
                     break
-            except:
+            except Exception, e:
                 log.exception("Something went wrong while processing!")
                 if item:
-                    log.exception("Item was: %s", item)
-                messages.put(("error", item))
+                    log.debug("Item was: %s", item)
+                messages.put((FAILURE, item, e))

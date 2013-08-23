@@ -1,4 +1,4 @@
-var SLAVEAPI = "http://localhost:9999";
+var SLAVEAPI = "http://cruncher.srv.releng.scl3.mozilla.com:8000";
 
 function poll_for_success(requestid, slave) {
     var resultsElement = $("#results");
@@ -6,7 +6,7 @@ function poll_for_success(requestid, slave) {
     $.ajax(url, {"type": "get"})
     .done(function(data) {
         if (data["state"] != "pending") {
-            newText = slave + " - Reboot is " + data["msg"];
+            newText = slave + " - Reboot is " + data["text"];
         }
         else {
             newText = slave + " - Reboot is still pending";
