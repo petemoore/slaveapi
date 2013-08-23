@@ -6,9 +6,9 @@ class Bug(object):
         self.id_ = id_
         self.data = {}
         if loadInfo:
-            self.load()
+            self.refresh()
 
-    def load(self):
+    def refresh(self):
         self.data = bugzilla_client.get_bug(self.id_)
 
     def add_comment(self, comment, data={}):

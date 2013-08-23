@@ -1,6 +1,6 @@
 import time
 
-from bzrest.errors import BugzillaAPIError, INVALID_ALIAS, INVALID_BUG
+from bzrest.errors import BugNotFound
 
 from dns import resolver
 
@@ -71,13 +71,10 @@ class Slave(object):
         log.info("Getting bug debug for %s", self.name)
         self.bug = ProblemTrackingBug(self.name, loadInfo=False)
         try:
-            self.bug.load()
-        except BugzillaAPIError as e:
-            if e.bugzilla_code in (INVALID_ALIAS, INVALID_BUG) and createIfMissing:
-                log.info("Couldn't find bug for %s, creating it...", self.name)
-                self.bug.create()
-            else:
-                raise
+            self.bug.refresh()
+        except BugNotFound:
+            log.info("Couldn't find bug for %s, creating it...", self.name)
+            self.bug.create()
 
     def ssh_reboot(self):
         console = self._get_console()
