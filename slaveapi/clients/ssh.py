@@ -17,7 +17,7 @@ class SSHConsole(object):
     # hyphens because it gets run through a bash shell. We also delay the
     # shutdown for a few seconds so that we have time to read the exit status
     # of the shutdown command.
-    reboot_command = "shutdown -r 3 || sudo shutdown -r 3 || shutdown -f -t 3 -r"
+    reboot_command = "reboot || sudo reboot || shutdown -f -t 3 -r"
 
     def __init__(self, fqdn, credentials):
         self.fqdn = fqdn
