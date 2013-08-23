@@ -39,14 +39,14 @@ class Slave(object):
         return "%s.%s" % (self.name, self.domain)
 
     def load_slavealloc_info(self):
-        log.info("Getting slavealloc debug for %s", self.name)
+        log.info("Getting slavealloc info for %s", self.name)
         debug = slavealloc.get_slave(config["slavealloc_api"], name=self.name)
         self.enabled = debug["enabled"]
         self.basedir = debug["basedir"]
         self.notes = debug["notes"]
 
     def load_inventory_info(self):
-        log.info("Getting inventory debug for %s", self.name)
+        log.info("Getting inventory info for %s", self.name)
         debug = inventory.get_system(
             self.fqdn, config["inventory_api"], config["inventory_username"],
             config["inventory_password"],
@@ -68,7 +68,7 @@ class Slave(object):
             pass
 
     def load_bug_info(self, createIfMissing=False):
-        log.info("Getting bug debug for %s", self.name)
+        log.info("Getting bug info for %s", self.name)
         self.bug = ProblemTrackingBug(self.name, loadInfo=False)
         try:
             self.bug.refresh()
