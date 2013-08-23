@@ -21,11 +21,11 @@ class Reboot(MethodView):
 
         res = results[slave][reboot.__name__].get(requestid, None)
         if res:
-            return jsonify({"state": res.state, "text": res.text})
+            return res.json()
         else:
             reboots = {}
             for id_, res in results[slave][reboot.__name__].iteritems():
-                reboots[id_] = {"state": res.state, "text": res.text}
+                reboots[id_] = res.json()
             return jsonify({"reboots": reboots})
 
     def post(self, slave):
@@ -35,7 +35,7 @@ class Reboot(MethodView):
         # Wait for the action to complete if requested.
         waittime = int(request.form.get("waittime", 0))
         res.wait(waittime)
-        data = {"state": res.state, "text": res.text, "requestid": res.id_}
+        data = res.json(include_requestid=True)
         if res.is_done():
             return jsonify(data)
         else:

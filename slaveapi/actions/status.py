@@ -37,5 +37,11 @@ class ActionResult(object):
         else:
             return False
 
+    def json(self, include_requestid=False):
+        data = {"state": self.state, "text": self.text}
+        if include_requestid:
+            data["requestid"] = self.id_
+        return data
+
     def wait(self, timeout=None):
         return self.event.wait(timeout)
