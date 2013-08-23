@@ -33,7 +33,7 @@ class SSHConsole(object):
             for u in usernames:
                 possible_credentials[u] = self.credentials[u]
         else:
-            possible_credentials = self.crendentials
+            possible_credentials = self.credentials
         for username, passwords in possible_credentials:
             first_password = True
             for p in passwords:
