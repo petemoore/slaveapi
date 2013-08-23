@@ -1,4 +1,4 @@
-from subprocess import check_output, STDOUT
+from subprocess import check_output, STDOUT, CalledProcessError
 
 def ping(host, count=4, deadline=None):
     """Tries to ping "host". Returns True if all request packets recieve a
@@ -7,7 +7,11 @@ def ping(host, count=4, deadline=None):
     if deadline:
         cmd += ["-w", str(deadline)]
     cmd += [host]
-    for line in check_output(cmd, stderr=STDOUT):
+    try:
+        output = check_output(cmd, stderr=STDOUT)
+    except CalledProcessError, e:
+        output = e.output
+    for line in output:
         if "0% packet loss" in line:
             return True
     return False
