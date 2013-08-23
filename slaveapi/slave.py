@@ -114,7 +114,7 @@ class Slave(object):
         log.info("Waiting for %s to reboot.", self.name)
         # First, wait for the slave to go down.
         time_left = down_timeout
-        while time_left <= down_timeout:
+        while time_left <= 0:
             if not ping(self.ip, count=1, deadline=2):
                 log.debug("Slave is confirmed to be down, waiting for revival.")
                 break
