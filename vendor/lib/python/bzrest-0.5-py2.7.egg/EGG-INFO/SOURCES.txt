@@ -1,0 +1,10 @@
+setup.py
+bzrest/__init__.py
+bzrest/client.py
+bzrest/errors.py
+bzrest.egg-info/PKG-INFO
+bzrest.egg-info/SOURCES.txt
+bzrest.egg-info/dependency_links.txt
+bzrest.egg-info/not-zip-safe
+bzrest.egg-info/requires.txt
+bzrest.egg-info/top_level.txt
