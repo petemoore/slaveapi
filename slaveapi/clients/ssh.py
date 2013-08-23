@@ -17,7 +17,7 @@ class SSHConsole(object):
     # hyphens because it gets run through a bash shell. We also delay the
     # shutdown for a few seconds so that we have time to read the exit status
     # of the shutdown command.
-    reboot_command = "reboot || sudo reboot || shutdown -f -t 3 -r"
+    reboot_commands = ["reboot", "sudo reboot", "shutdown -f -t 3 -r"]
 
     def __init__(self, fqdn, credentials):
         self.fqdn = fqdn
@@ -119,10 +119,12 @@ class SSHConsole(object):
     def reboot(self):
         log.info("Attempting to reboot %s", self.fqdn)
 
-        rc, output = self.run_cmd(self.reboot_command)
-        if rc == 0:
-            log.info("Successfully initiated reboot of %s", self.fqdn)
-            return True
+        for cmd in self.reboot_commands:
+            rc, output = self.run_cmd(cmd)
+            if rc == 0:
+                log.info("Successfully initiated reboot of %s", self.fqdn)
+                # Success! We're done!
+                break
         else:
             # XXX: raise a better exception here
             raise Exception("Unable to reboot %s" % self.fqdn)
