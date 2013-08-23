@@ -20,7 +20,7 @@ def get_system(fqdn, api, username, password):
 
     # We do some post processing because PDUs are buried in the key/value store
     # for some hosts.
-    pdu = find_key_value("system.pdu.0")
+    pdu = find_key_value(info, "system.pdu.0")
     if pdu:
         pdu, pdu_port = pdu.split(":")
         if not pdu.endswith(".mozilla.com"):
