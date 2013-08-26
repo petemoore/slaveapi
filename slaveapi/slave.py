@@ -120,5 +120,5 @@ def wait_for_reboot(self, slave, alive_timeout=300, down_timeout=60):
     # Then wait for it come back up.
     return is_alive(slave, timeout=alive_timeout)
 
-def get_console(self):
+def get_console(self, slave):
     return SSHConsole(slave.ip, config["ssh_credentials"])

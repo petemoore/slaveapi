@@ -7,9 +7,17 @@ import logging
 log = logging.getLogger(__name__)
 
 
+class RemoteCommandError(Exception):
+    def __init__(self, message, rc=None, output=None, *args, **kwargs):
+        self.rc = rc
+        self.output = output
+        Exception.__init__(self, message, *args, **kwargs)
+
+
 class IgnorePolicy(object):
     def missing_host_key(self, *args):
         pass
+
 
 class SSHConsole(object):
     # By trying a few different reboot commands we don't need to special case
@@ -76,6 +84,8 @@ class SSHConsole(object):
 
             start = time.time()
             data = ""
+            output = None
+            rc = None
             while time.time() - start < timeout:
                 while shell.recv_ready():
                     data += shell.recv(1024)
@@ -109,7 +119,10 @@ class SSHConsole(object):
                     time.sleep(5)
             else:
                 shell.close()
-                raise Exception("Timed out when running command.")
+                raise RemoteCommandError("Timed out when running command.")
+        except:
+            log.debug("Caught exception while running command:", exc_info=True)
+            raise RemoteCommandError("Caught exception while running command.", output=output, rc=rc)
         finally:
             self.disconnect()
 
@@ -125,7 +138,7 @@ class SSHConsole(object):
                 return
         else:
             # XXX: raise a better exception here
-            raise Exception("Unable to reboot %s" % self.fqdn)
+            raise RemoteCommandError("Unable to reboot %s after trying all commands" % self.fqdn)
 
     def _get_shell(self):
         shell = self.client.get_transport().open_session()
