@@ -74,9 +74,9 @@ class SSHConsole(object):
             shell = self._get_shell()
             shell.sendall("%s\r\necho $?\r\n" % cmd)
 
-            time_left = timeout
+            start = time.time()
             data = ""
-            while True:
+            while time.time() - start < timeout:
                 while shell.recv_ready():
                     data += shell.recv(1024)
 
@@ -106,12 +106,10 @@ class SSHConsole(object):
                     return rc, output
                 else:
                     # Still waiting for the command to finish
-                    if time_left <= 0:
-                        shell.close()
-                        raise Exception("Timed out when running command.")
-                    else:
-                        time_left -= 5
-                        time.sleep(5)
+                    time.sleep(5)
+            else:
+                shell.close()
+                raise Exception("Timed out when running command.")
         finally:
             self.disconnect()
 

@@ -91,33 +91,31 @@ class Slave(object):
             new_reboot_bug.create()
             return new_reboot_bug
 
-    def is_alive(self, timeout=300, retry_interval=5):
-        log.info("Checking for signs of life on %s.", self.name)
-        time_left = timeout
-        while time_left > 0:
-            time_left -= 10
-            if ping(self.ip, deadline=10):
-                log.debug("Slave is alive.")
+    def is_alive(self, timeout=300):
+        log.info("Checking for signs of life on %s", self.name)
+        start = time.time()
+        while time.time() - start < timeout:
+            if ping(self.ip):
+                log.debug("Slave is alive")
                 return True
             else:
-                log.debug("Slave isn't alive yet.")
-                if time_left <= 0:
-                    log.error("Timeout exceeded, giving up.")
-                    return False
-                time.sleep(retry_interval)
-                time_left -= retry_interval
+                log.debug("Slave isn't alive yet")
+                time.sleep(5)
+        else:
+            log.error("Timeout of %d exceeded, giving up" % timeout)
+            return False
                 
     def wait_for_reboot(self, alive_timeout=300, down_timeout=60):
         log.info("Waiting %d seconds for %s to reboot.", down_timeout, self.name)
         # First, wait for the slave to go down.
-        time_left = down_timeout
-        while time_left > 0:
-            log.debug("time_left is %d", time_left)
+        start = time.time()
+        while time.time() - start < down_timeout:
             if not ping(self.ip, count=1, deadline=2):
                 log.debug("Slave is confirmed to be down, waiting for revival.")
                 break
-            time_left -= 2
-            log.debug("Slave is not down yet...")
+            else:
+                log.debug("Slave is not down yet...")
+                time.sleep(1)
         else:
             log.error("Slave didn't go down in allotted time, assuming it didn't reboot.")
             return False
