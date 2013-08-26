@@ -1,4 +1,4 @@
-from ..slave import Slave
+from ..slave import Slave, get_reboot_bug, wait_for_reboot, get_console
 
 import logging
 log = logging.getLogger(__name__)
@@ -14,8 +14,9 @@ def reboot(name):
     alive = False
     # Try an SSH reboot first of all...
     try:
-        slave.ssh_reboot()
-        alive = slave.wait_for_reboot()
+        console = get_console(slave)
+        console.reboot()
+        alive = wait_for_reboot(slave)
     except:
         log.exception("Caught exception.")
 
@@ -24,7 +25,7 @@ def reboot(name):
         bug_comment += "Failed.\n"
         bug_comment += "Attempting management interface reboot..."
         slave.mgmt.powercycle()
-        alive = slave.wait_for_reboot()
+        alive = wait_for_reboot(slave)
 
     # Is mgmt interface _and_ PDU a valid configuration?
     # Mayhaps a PDU reboot?
@@ -32,7 +33,7 @@ def reboot(name):
         bug_comment += "Failed.\n"
         bug_comment += "Attempting PDU reboot..."
         slave.pdu.powercycle()
-        alive = slave.wait_for_reboot()
+        alive = wait_for_reboot(slave)
 
     if alive:
         bug_comment += "Success!"
@@ -40,7 +41,7 @@ def reboot(name):
     else:
         # We've done all we can - now we need human involvement to get the
         # machine back online.
-        reboot_bug = slave.get_reboot_bug()
+        reboot_bug = get_reboot_bug(slave)
         bug_comment += "Failed.\n"
         bug_comment += "Can't do anything else, human intervention needed."
         data = {

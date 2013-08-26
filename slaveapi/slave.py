@@ -76,52 +76,49 @@ class Slave(object):
             log.info("Couldn't find bug for %s, creating it...", self.name)
             self.bug.create()
 
-    def ssh_reboot(self):
-        console = self._get_console()
-        console.reboot()
 
-    def get_reboot_bug(self):
-        current_reboot_bug = RebootBug(self.colo)
-        # if it's open, attach slave to it
-        if current_reboot_bug.data["is_open"]:
-            return current_reboot_bug
+def get_reboot_bug(self, slave):
+    current_reboot_bug = RebootBug(slave.colo)
+    # if it's open, attach slave to it
+    if current_reboot_bug.data["is_open"]:
+        return current_reboot_bug
+    else:
+        current_reboot_bug.update({"alias": None})
+        new_reboot_bug = RebootBug(slave.colo, loadInfo=False)
+        new_reboot_bug.create()
+        return new_reboot_bug
+
+def is_alive(self, slave, timeout=300):
+    log.info("Checking for signs of life on %s", slave.name)
+    start = time.time()
+    while time.time() - start < timeout:
+        if ping(slave.ip):
+            log.debug("Slave is alive")
+            return True
         else:
-            current_reboot_bug.update({"alias": None})
-            new_reboot_bug = RebootBug(self.colo, loadInfo=False)
-            new_reboot_bug.create()
-            return new_reboot_bug
+            log.debug("Slave isn't alive yet")
+            time.sleep(5)
+    else:
+        log.error("Timeout of %d exceeded, giving up" % timeout)
+        return False
 
-    def is_alive(self, timeout=300):
-        log.info("Checking for signs of life on %s", self.name)
-        start = time.time()
-        while time.time() - start < timeout:
-            if ping(self.ip):
-                log.debug("Slave is alive")
-                return True
-            else:
-                log.debug("Slave isn't alive yet")
-                time.sleep(5)
+def wait_for_reboot(self, slave, alive_timeout=300, down_timeout=60):
+    log.info("Waiting %d seconds for %s to reboot.", down_timeout, slave.name)
+    # First, wait for the slave to go down.
+    start = time.time()
+    while time.time() - start < down_timeout:
+        if not ping(slave.ip, count=1, deadline=2):
+            log.debug("Slave is confirmed to be down, waiting for revival.")
+            break
         else:
-            log.error("Timeout of %d exceeded, giving up" % timeout)
-            return False
-                
-    def wait_for_reboot(self, alive_timeout=300, down_timeout=60):
-        log.info("Waiting %d seconds for %s to reboot.", down_timeout, self.name)
-        # First, wait for the slave to go down.
-        start = time.time()
-        while time.time() - start < down_timeout:
-            if not ping(self.ip, count=1, deadline=2):
-                log.debug("Slave is confirmed to be down, waiting for revival.")
-                break
-            else:
-                log.debug("Slave is not down yet...")
-                time.sleep(1)
-        else:
-            log.error("Slave didn't go down in allotted time, assuming it didn't reboot.")
-            return False
+            log.debug("Slave is not down yet...")
+            time.sleep(1)
+    else:
+        log.error("Slave didn't go down in allotted time, assuming it didn't reboot.")
+        return False
 
-        # Then wait for it come back up.
-        return self.is_alive(timeout=alive_timeout)
+    # Then wait for it come back up.
+    return is_alive(slave, timeout=alive_timeout)
 
-    def _get_console(self):
-        return SSHConsole(self.fqdn, config["ssh_credentials"])
+def get_console(self):
+    return SSHConsole(slave.ip, config["ssh_credentials"])
