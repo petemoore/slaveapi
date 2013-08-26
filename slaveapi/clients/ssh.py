@@ -39,7 +39,7 @@ class SSHConsole(object):
             for p in passwords:
                 try:
                     log.info("Attempting to connect to %s as %s", self.fqdn, username)
-                    self.client.connect(hostname=self.fqdn, username=username, password=p, timeout=timeout, look_for_keys=False)
+                    self.client.connect(hostname=self.fqdn, username=username, password=p, timeout=timeout, look_for_keys=False, allow_agent=False)
                     log.info("Connection to %s succeeded!", self.fqdn)
                     self.connected = True
                     break
