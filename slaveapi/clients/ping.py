@@ -1,5 +1,7 @@
+import logging
 from subprocess import check_output, STDOUT, CalledProcessError
 
+log = logging.getLogger(__name__)
 
 def ping(host, count=4, deadline=None):
     """Tries to ping "host". Returns True if all request packets recieve a
@@ -12,6 +14,8 @@ def ping(host, count=4, deadline=None):
         output = check_output(cmd, stderr=STDOUT)
     except CalledProcessError, e:
         output = e.output
+    log.debug("Ping output to %s is:", host)
+    log.debug(output)
     if " 0% packet loss" in output:
         return True
     return False
