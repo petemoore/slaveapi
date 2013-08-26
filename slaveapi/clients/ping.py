@@ -14,8 +14,8 @@ def ping(host, count=4, deadline=None):
         output = check_output(cmd, stderr=STDOUT)
     except CalledProcessError, e:
         output = e.output
-    log.debug("Ping output to %s is:", host)
-    log.debug(output)
     if " 0% packet loss" in output:
+        log.debug("ping to %s was successful", host)
         return True
+    log.debug("failed to ping %s", host)
     return False
