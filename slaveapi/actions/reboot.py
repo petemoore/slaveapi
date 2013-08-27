@@ -20,14 +20,13 @@ def reboot(name):
     except:
         log.exception("Caught exception.")
 
-    # If that doesn't work, maybe an mgmt reboot will...
-    if not alive and slave.mgmt:
+    # If that doesn't work, maybe an IPMI reboot will...
+    if not alive and slave.ipmi:
         bug_comment += "Failed.\n"
-        bug_comment += "Attempting management interface reboot..."
-        slave.mgmt.powercycle()
+        bug_comment += "Attempting IPMI reboot..."
+        slave.ipmi.powercycle()
         alive = wait_for_reboot(slave)
 
-    # Is mgmt interface _and_ PDU a valid configuration?
     # Mayhaps a PDU reboot?
     if not alive and slave.pdu:
         bug_comment += "Failed.\n"
