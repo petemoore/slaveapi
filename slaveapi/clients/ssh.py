@@ -46,21 +46,22 @@ class SSHConsole(object):
             first_password = True
             for p in passwords:
                 try:
-                    log.info("Attempting to connect to %s as %s", self.fqdn, username)
+                    log.debug("Attempting to connect to %s@%s", username, self.fqdn)
                     self.client.connect(hostname=self.fqdn, username=username, password=p, timeout=timeout, look_for_keys=False, allow_agent=False)
-                    log.info("Connection to %s succeeded!", self.fqdn)
+                    log.info("Connection to %s@%s succeeded!", username, self.fqdn)
                     self.connected = True
                     break
                 # We can eat most of these exceptions because we try multiple
                 # different auths. We need to hang on to it to re-raise in case
                 # we ultimately fail.
                 except AuthenticationException, e:
-                    log.info("Authentication failure.")
+                    log.debug("Authentication failure.")
                     if first_password:
                         log.warning("First password for %s@%s didn't work.", username, self.fqdn)
                         first_password = False
                     last_exc = e
         if not self.connected:
+            log.info("Couldn't connect to %s with any credentials.", self.fqdn)
             raise last_exc
 
     def disconnect(self):
