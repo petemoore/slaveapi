@@ -1,3 +1,5 @@
+from collections import defaultdict
+
 from gevent.event import Event
 
 PENDING, RUNNING, SUCCESS, FAILURE = range(4)
@@ -37,7 +39,7 @@ class ActionResult(object):
         else:
             return False
 
-    def json(self, include_requestid=False):
+    def serialize(self, include_requestid=False):
         data = {"state": self.state, "text": self.text}
         if include_requestid:
             data["requestid"] = self.id_
@@ -45,3 +47,12 @@ class ActionResult(object):
 
     def wait(self, timeout=None):
         return self.event.wait(timeout)
+
+
+def serialize_results(results):
+    ret = defaultdict(lambda: defaultdict(dict))
+    for slave in results:
+        for action in results[slave]:
+            for requestid, result in results[slave][action].iteritems():
+                ret[slave][action][requestid] = result.json()
+    return ret

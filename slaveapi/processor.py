@@ -52,7 +52,7 @@ class Processor(object):
                 except queue.Empty:
                     break
 
-                log.debug("%s - Processing item: %s", slave, item)
+                log.debug("Processing item: %s", item)
                 slave, action, args, kwargs, res = item
                 messages.put((RUNNING, item))
                 action(slave, *args, **kwargs)
@@ -63,7 +63,7 @@ class Processor(object):
                 if jobs >= self.max_jobs:
                     break
             except Exception, e:
-                log.exception("%s - Something went wrong while processing!", slave)
+                log.exception("Something went wrong while processing!")
                 if item:
-                    log.debug("%s - Item was: %s", slave, item)
+                    log.debug("Item was: %s", item)
                 messages.put((FAILURE, item, str(e)))
