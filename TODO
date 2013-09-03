@@ -15,3 +15,4 @@ Other:
 - Query API for status of command
 - Can we wait and return data for some cheaper commands, rather than making them do requests?
 -- Can we have a timeout and add a jobid later?
+- Ack nagios alerts after IT reboot bug is filed (and other situations where it makes sense to).

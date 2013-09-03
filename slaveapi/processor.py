@@ -23,7 +23,7 @@ class Processor(object):
     def add_work(self, slave, action, *args, **kwargs):
         res = ActionResult(slave, action.__name__)
         item = (slave, action, args, kwargs, res)
-        log.debug("Adding work to queue: %s", item)
+        log.debug("%s - Adding work to queue: %s", slave, item)
         self.work_queue.put(item)
         self._start_worker()
         return res
@@ -52,7 +52,7 @@ class Processor(object):
                 except queue.Empty:
                     break
 
-                log.debug("Processing item: %s", item)
+                log.debug("%s - Processing item: %s", slave, item)
                 slave, action, args, kwargs, res = item
                 messages.put((RUNNING, item))
                 action(slave, *args, **kwargs)
@@ -63,7 +63,7 @@ class Processor(object):
                 if jobs >= self.max_jobs:
                     break
             except Exception, e:
-                log.exception("Something went wrong while processing!")
+                log.exception("%s - Something went wrong while processing!", slave)
                 if item:
-                    log.debug("Item was: %s", item)
+                    log.debug("%s - Item was: %s", slave, item)
                 messages.put((FAILURE, item, str(e)))

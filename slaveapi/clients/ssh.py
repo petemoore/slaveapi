@@ -46,22 +46,22 @@ class SSHConsole(object):
             first_password = True
             for p in passwords:
                 try:
-                    log.debug("Attempting to connect to %s@%s", username, self.fqdn)
+                    log.debug("%s - Attempting to connect as %s", self.fqdn, username)
                     self.client.connect(hostname=self.fqdn, username=username, password=p, timeout=timeout, look_for_keys=False, allow_agent=False)
-                    log.info("Connection to %s@%s succeeded!", username, self.fqdn)
+                    log.info("%s - Connection as %s succeeded!", self.fqdn, username)
                     self.connected = True
                     break
                 # We can eat most of these exceptions because we try multiple
                 # different auths. We need to hang on to it to re-raise in case
                 # we ultimately fail.
                 except AuthenticationException, e:
-                    log.debug("Authentication failure.")
+                    log.debug("%s - Authentication failure.", self.fqdn)
                     if first_password:
-                        log.warning("First password for %s@%s didn't work.", username, self.fqdn)
+                        log.warning("%s - First password as %s didn't work.", self.fqdn, username)
                         first_password = False
                     last_exc = e
         if not self.connected:
-            log.info("Couldn't connect to %s with any credentials.", self.fqdn)
+            log.info("%s - Couldn't connect with any credentials.", self.fqdn)
             raise last_exc
 
     def disconnect(self):
@@ -78,7 +78,7 @@ class SSHConsole(object):
         if not self.connected:
             self.connect()
 
-        log.debug("Running %s on %s through the shell", cmd, self.fqdn)
+        log.debug("%s - Running %s", self.fqdn, cmd)
         try:
             shell = self._get_shell()
             shell.sendall("%s\r\necho $?\r\n" % cmd)
@@ -122,19 +122,19 @@ class SSHConsole(object):
                 shell.close()
                 raise RemoteCommandError("Timed out when running command.")
         except:
-            log.debug("Caught exception while running command:", exc_info=True)
+            log.debug("%s - Caught exception while running command:", self.fqdn, exc_info=True)
             raise RemoteCommandError("Caught exception while running command.", output=output, rc=rc)
         finally:
             self.disconnect()
 
 
     def reboot(self):
-        log.info("Attempting to reboot %s", self.fqdn)
+        log.info("%s - Attempting to reboot", self.fqdn)
 
         for cmd in self.reboot_commands:
             rc, output = self.run_cmd(cmd)
             if rc == 0:
-                log.info("Successfully initiated reboot of %s", self.fqdn)
+                log.info("%s - Successfully initiated reboot", self.fqdn)
                 # Success! We're done!
                 return
         else:

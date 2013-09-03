@@ -39,14 +39,14 @@ class Slave(object):
         return "%s.%s" % (self.name, self.domain)
 
     def load_slavealloc_info(self):
-        log.info("Getting slavealloc info for %s", self.name)
+        log.info("%s - Getting slavealloc info", self.name)
         debug = slavealloc.get_slave(config["slavealloc_api"], name=self.name)
         self.enabled = debug["enabled"]
         self.basedir = debug["basedir"]
         self.notes = debug["notes"]
 
     def load_inventory_info(self):
-        log.info("Getting inventory info for %s", self.name)
+        log.info("%s - Getting inventory info", self.name)
         debug = inventory.get_system(
             self.fqdn, config["inventory_api"], config["inventory_username"],
             config["inventory_password"],
@@ -68,12 +68,12 @@ class Slave(object):
             pass
 
     def load_bug_info(self, createIfMissing=False):
-        log.info("Getting bug info for %s", self.name)
+        log.info("%s - Getting bug info", self.name)
         self.bug = ProblemTrackingBug(self.name, loadInfo=False)
         try:
             self.bug.refresh()
         except BugNotFound:
-            log.info("Couldn't find bug for %s, creating it...", self.name)
+            log.info("%s - Couldn't find bug, creating it...", self.name)
             self.bug.create()
 
 
@@ -89,32 +89,32 @@ def get_reboot_bug(slave):
         return new_reboot_bug
 
 def is_alive(slave, timeout=300):
-    log.info("Checking for signs of life on %s", slave.name)
+    log.info("%s - Checking for signs of life", slave.name)
     start = time.time()
     while time.time() - start < timeout:
         if ping(slave.ip):
-            log.debug("Slave is alive")
+            log.debug("%s - Slave is alive", slave.name)
             return True
         else:
-            log.debug("Slave isn't alive yet")
+            log.debug("%s - Slave isn't alive yet", slave.name)
             time.sleep(5)
     else:
-        log.error("Timeout of %d exceeded, giving up" % timeout)
+        log.error("%s - Timeout of %d exceeded, giving up", slave.name, timeout)
         return False
 
 def wait_for_reboot(slave, alive_timeout=300, down_timeout=60):
-    log.info("Waiting %d seconds for %s to reboot.", down_timeout, slave.name)
+    log.info("%s - Waiting %d seconds for reboot.", slave.name, down_timeout)
     # First, wait for the slave to go down.
     start = time.time()
     while time.time() - start < down_timeout:
         if not ping(slave.ip, count=1, deadline=2):
-            log.debug("Slave is confirmed to be down, waiting for revival.")
+            log.debug("%s - Slave is confirmed to be down, waiting for revival.", slave.name)
             break
         else:
-            log.debug("Slave is not down yet...")
+            log.debug("%s - Slave is not down yet...", slave.name)
             time.sleep(1)
     else:
-        log.error("Slave didn't go down in allotted time, assuming it didn't reboot.")
+        log.error("%s - Slave didn't go down in allotted time, assuming it didn't reboot.", slave.name)
         return False
 
     # Then wait for it come back up.

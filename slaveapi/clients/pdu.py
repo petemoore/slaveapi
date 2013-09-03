@@ -30,12 +30,12 @@ class PDU(object):
         self._run_cmd(self.on_cmd)
 
     def powercycle(self, delay=5):
-        log.info("Powercycling %s via PDU.", self.fqdn)
+        log.info("%s - Powercycling via PDU.", self.fqdn)
         self.poweroff()
-        log.debug("Power is off, waiting %d seconds before turning it back on.", delay)
+        log.debug("%s - Power is off, waiting %d seconds before turning it back on.", self.fqdn, delay)
         time.sleep(delay)
         self.poweron()
-        log.info("Powercycle of %s completed.", self.fqdn)
+        log.info("%s - Powercycle completed.", self.fqdn)
 
     def _run_cmd(self, cmd):
         oid = "%s.%s.%s.%s" % (self.base_oid, self.tower, self.infeed, self.outlet)
@@ -52,5 +52,5 @@ class PDU(object):
                 infeed = infeed.replace(before, after)
             return tower, infeed, outlet
         except IndexError:
-            log.error("Couldn't parse port %s", port)
+            log.error("%s - Couldn't parse port %s", self.fqdn, port)
             raise

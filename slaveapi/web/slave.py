@@ -15,7 +15,7 @@ class Reboot(MethodView):
             requestid = request.args.get("requestid", None)
             if requestid:
                 requestid = int(requestid)
-                log.debug("Got requestid: %s" % requestid)
+                log.debug("%s - Got requestid: %s", slave, requestid)
         except TypeError:
             return Response(response="Couldn't parse requestid", status=400)
 

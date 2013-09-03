@@ -18,7 +18,7 @@ def reboot(name):
         console.reboot()
         alive = wait_for_reboot(slave)
     except:
-        log.exception("Caught exception.")
+        log.exception("%s - Caught exception.", name)
 
     # If that doesn't work, maybe an IPMI reboot will...
     if not alive and slave.ipmi:
