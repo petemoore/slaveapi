@@ -13,7 +13,7 @@ class Messenger(object):
         while True:
             msg = messages.get()
             log.debug("Got message: %s", msg)
-            state, item = msg[0:1]
+            state, item = msg[0:2]
             try:
                 text = msg[2]
             except IndexError:
