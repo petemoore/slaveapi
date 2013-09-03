@@ -54,5 +54,5 @@ def serialize_results(results):
     for slave in results:
         for action in results[slave]:
             for requestid, result in results[slave][action].iteritems():
-                ret[slave][action][requestid] = result.json()
+                ret[slave][action][requestid] = result.serialize()
     return ret
