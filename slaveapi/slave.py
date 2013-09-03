@@ -77,7 +77,7 @@ class Slave(object):
             self.bug.create()
 
 
-def get_reboot_bug(self, slave):
+def get_reboot_bug(slave):
     current_reboot_bug = RebootBug(slave.colo)
     # if it's open, attach slave to it
     if current_reboot_bug.data["is_open"]:
@@ -88,7 +88,7 @@ def get_reboot_bug(self, slave):
         new_reboot_bug.create()
         return new_reboot_bug
 
-def is_alive(self, slave, timeout=300):
+def is_alive(slave, timeout=300):
     log.info("Checking for signs of life on %s", slave.name)
     start = time.time()
     while time.time() - start < timeout:
@@ -102,7 +102,7 @@ def is_alive(self, slave, timeout=300):
         log.error("Timeout of %d exceeded, giving up" % timeout)
         return False
 
-def wait_for_reboot(self, slave, alive_timeout=300, down_timeout=60):
+def wait_for_reboot(slave, alive_timeout=300, down_timeout=60):
     log.info("Waiting %d seconds for %s to reboot.", down_timeout, slave.name)
     # First, wait for the slave to go down.
     start = time.time()
@@ -120,5 +120,5 @@ def wait_for_reboot(self, slave, alive_timeout=300, down_timeout=60):
     # Then wait for it come back up.
     return is_alive(slave, timeout=alive_timeout)
 
-def get_console(self, slave):
+def get_console(slave):
     return SSHConsole(slave.ip, config["ssh_credentials"])
