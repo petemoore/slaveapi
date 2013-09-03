@@ -46,9 +46,9 @@ class BugzillaClient(object):
         log.debug("Response body: %s", resp)
         if resp.get("error", False):
             if resp["code"] in (INVALID_ALIAS, INVALID_BUG):
-                raise BugNotFound(resp["code"], resp["message"], response=resp)
+                raise BugNotFound(resp["message"], resp)
             else:
-                raise BugzillaAPIError(resp["code"], resp["message"], response=resp)
+                raise BugzillaAPIError(resp["code"], resp["message"], resp)
         return resp
 
     def create_bug(self, data):
