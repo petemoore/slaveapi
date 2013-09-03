@@ -66,4 +66,4 @@ class Processor(object):
                 log.exception("Something went wrong while processing!")
                 if item:
                     log.debug("Item was: %s", item)
-                messages.put((FAILURE, item, e))
+                messages.put((FAILURE, item, str(e)))
