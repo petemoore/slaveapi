@@ -10,4 +10,6 @@ class BugzillaAPIError(requests.HTTPError):
 
 
 class BugNotFound(ValueError):
-    pass
+    def __init__(self, bugzilla_code, *args, **kwargs):
+        self.bugzilla_code = bugzilla_code
+        ValueError.__init__(self, *args, **kwargs)
