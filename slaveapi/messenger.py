@@ -11,8 +11,13 @@ class Messenger(object):
 
     def __call__(self):
         while True:
-            state, item, text = messages.get()
-            log.debug("Got message: %s", (state, item, text))
+            msg = messages.get()
+            log.debug("Got message: %s", msg)
+            state, item = msg[0:1]
+            try:
+                text = msg[2]
+            except IndexError:
+                text = ""
             slave, action, args, kwargs, res = item
             res.state = state
             res.text = text
