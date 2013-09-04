@@ -55,9 +55,9 @@ class Processor(object):
                 log.debug("Processing item: %s", item)
                 slave, action, args, kwargs, res = item
                 messages.put((RUNNING, item))
-                action(slave, *args, **kwargs)
+                res, msg = action(slave, *args, **kwargs)
 
-                messages.put((SUCCESS, item))
+                messages.put((res, item, msg))
 
                 # todo, bail after max jobs
                 if jobs >= self.max_jobs:

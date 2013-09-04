@@ -1,3 +1,4 @@
+from .status import SUCCESS, FAILURE
 from ..slave import Slave, get_reboot_bug, wait_for_reboot, get_console
 
 import logging
@@ -37,6 +38,7 @@ def reboot(name):
     if alive:
         bug_comment += "Success!"
         slave.bug.add_comment(bug_comment)
+        return SUCCESS, bug_comment
     else:
         # We've done all we can - now we need human involvement to get the
         # machine back online.
@@ -49,3 +51,4 @@ def reboot(name):
             }
         }
         slave.bug.add_comment(bug_comment, data)
+        return FAILURE, bug_comment
