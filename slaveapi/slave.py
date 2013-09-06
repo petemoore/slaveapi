@@ -78,15 +78,22 @@ class Slave(object):
 
 
 def get_reboot_bug(slave):
-    current_reboot_bug = RebootBug(slave.colo)
-    # if it's open, attach slave to it
-    if current_reboot_bug.data["is_open"]:
-        return current_reboot_bug
-    else:
-        current_reboot_bug.update({"alias": None})
-        new_reboot_bug = RebootBug(slave.colo, loadInfo=False)
-        new_reboot_bug.create()
-        return new_reboot_bug
+    try:
+        current_reboot_bug = RebootBug(slave.colo, loadInfo=False)
+        current_reboot_bug.refresh()
+        # if it's open, attach slave to it
+        if current_reboot_bug.data["is_open"]:
+            return current_reboot_bug
+        else:
+            current_reboot_bug.update({"alias": None})
+            # New reboot bug will be created below.
+    except BugNotFound:
+        # Will be created below.
+        pass
+    log.info("%s - Creating new reboot bug for %s", slave.name, slave.colo)
+    new_reboot_bug = RebootBug(slave.colo, loadInfo=False)
+    new_reboot_bug.create()
+    return new_reboot_bug
 
 def is_alive(slave, timeout=300):
     log.info("%s - Checking for signs of life", slave.name)
