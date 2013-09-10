@@ -22,7 +22,7 @@ class Slave(object):
         if "." not in name:
             name += "." + config["default_domain"]
         # dnslookup returns both CNAME resolution and IP addresses.
-        answer = dnslookup(name, 'A')[-1]
+        answer = dnslookup(name, "A")
         # The last entry in the return value is always the IP address.
         self.ip = answer[-1]
         # If there's additional entries in the list, they're the CNAME
