@@ -2,7 +2,8 @@ import time
 
 from bzrest.errors import BugNotFound
 
-from dns import resolver
+import DNS.Base.ServerError
+from DNS import dnslookup
 
 from . import config
 from .clients import inventory, slavealloc
@@ -20,7 +21,17 @@ class Slave(object):
     def __init__(self, name):
         if "." not in name:
             name += "." + config["default_domain"]
-        answer = resolver.query(name)
+        # dnslookup returns both CNAME resolution and IP addresses.
+        answer = dnslookup(name)[-1]
+        # The last entry in the return value is always the IP address.
+        self.ip = answer[-1]
+        # If there's additional entries in the list, they're the CNAME
+        # resolution. They appear before the IP address in the return value,
+        # the last of which is the fully resolved CNAME.
+        if len(answer) > 1:
+            canonical_name = answer[-2]
+        else:
+            canonical_name = name
         self.name = answer.canonical_name.to_text().split(".")[0]
         self.domain = answer.canonical_name.parent().to_text().rstrip(".")
         self.ip = answer[0].to_text()
@@ -59,11 +70,11 @@ class Slave(object):
         # always be found by appending "-mgmt.build.mozilla.org" to the name.
         try:
             ipmi_fqdn = "%s-mgmt.%s" % (self.name, config["default_domain"])
-            resolver.query(ipmi_fqdn)
+            dnslookup(ipmi_fqdn)
             # This will return None if the IPMI interface doesn't work for some
             # reason.
             self.ipmi = IPMIInterface.get_if_exists(ipmi_fqdn, config["ipmi_username"], config["ipmi_password"])
-        except resolver.NXDOMAIN:
+        except DNS.Base.ServerError:
             # IPMI Interface doesn't exist.
             pass
 
