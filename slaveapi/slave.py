@@ -33,10 +33,9 @@ class Slave(object):
         else:
             canonical_name = name
         self.name, self.domain = canonical_name.split(".", 1)
-        self.ip = answer[0].to_text()
         # Per IT, parsing the FQDN is the best way to find the colo.
         # Our hostnames always end in $colo.mozilla.com.
-        self.colo = self.fqdn.split(".")[-3]
+        self.colo = self.domain.split(".")[-3]
         self.ipmi = None
         self.bug = None
         self.enabled = None
@@ -69,7 +68,7 @@ class Slave(object):
         # always be found by appending "-mgmt.build.mozilla.org" to the name.
         try:
             ipmi_fqdn = "%s-mgmt.%s" % (self.name, config["default_domain"])
-            dnslookup(ipmi_fqdn, 'A')
+            dnslookup(ipmi_fqdn, "A")
             # This will return None if the IPMI interface doesn't work for some
             # reason.
             self.ipmi = IPMIInterface.get_if_exists(ipmi_fqdn, config["ipmi_username"], config["ipmi_password"])
