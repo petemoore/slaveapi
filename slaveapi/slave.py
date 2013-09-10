@@ -22,7 +22,7 @@ class Slave(object):
         if "." not in name:
             name += "." + config["default_domain"]
         # dnslookup returns both CNAME resolution and IP addresses.
-        answer = dnslookup(name)[-1]
+        answer = dnslookup(name, 'A')[-1]
         # The last entry in the return value is always the IP address.
         self.ip = answer[-1]
         # If there's additional entries in the list, they're the CNAME
@@ -69,7 +69,7 @@ class Slave(object):
         # always be found by appending "-mgmt.build.mozilla.org" to the name.
         try:
             ipmi_fqdn = "%s-mgmt.%s" % (self.name, config["default_domain"])
-            dnslookup(ipmi_fqdn)
+            dnslookup(ipmi_fqdn, 'A')
             # This will return None if the IPMI interface doesn't work for some
             # reason.
             self.ipmi = IPMIInterface.get_if_exists(ipmi_fqdn, config["ipmi_username"], config["ipmi_password"])
