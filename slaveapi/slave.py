@@ -2,8 +2,8 @@ import time
 
 from bzrest.errors import BugNotFound
 
-import DNS.Base.ServerError
 from DNS import dnslookup
+import DNS.Base
 
 from . import config
 from .clients import inventory, slavealloc
@@ -32,8 +32,7 @@ class Slave(object):
             canonical_name = answer[-2]
         else:
             canonical_name = name
-        self.name = answer.canonical_name.to_text().split(".")[0]
-        self.domain = answer.canonical_name.parent().to_text().rstrip(".")
+        self.name, self.domain = canonical_name.split(".", 1)
         self.ip = answer[0].to_text()
         # Per IT, parsing the FQDN is the best way to find the colo.
         # Our hostnames always end in $colo.mozilla.com.

@@ -3,7 +3,7 @@ import logging
 from gevent import queue, spawn
 
 from . import messages
-from .actions.status import ActionResult, RUNNING, SUCCESS, FAILURE
+from .actions.status import ActionResult, RUNNING, FAILURE
 
 log = logging.getLogger(__name__)
 
