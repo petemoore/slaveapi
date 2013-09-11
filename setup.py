@@ -13,7 +13,7 @@ setup(
         "gevent==0.13.8",
         "greenlet==0.4.1",
         "pycrypto>=2.6",
-        "jinja>=2.7.1",
+        "Jinja2>=2.7.1",
         "MarkupSafe>=0.18",
         "WebOb>=1.2.3",
         "requests>=1.2.3",
