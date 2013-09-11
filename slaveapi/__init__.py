@@ -1,3 +1,6 @@
+__version_info__ = ("1", "0")
+__version__ = ".".join(__version_info__)
+
 from collections import defaultdict
 
 from gevent import queue

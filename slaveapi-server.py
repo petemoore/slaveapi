@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 """SlaveAPI Server.
 
 Usage:
