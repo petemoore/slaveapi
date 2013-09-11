@@ -4,8 +4,8 @@
 
 Usage:
   slaveapi-server.py start (<config_file>)
-  slaveapi-server.py stop
-  slaveapi-server.py reload
+  slaveapi-server.py stop (<config_file>)
+  slaveapi-server.py reload (<config_file>)
 """
 
 # Gevent patching needs to be done before importing anything else.
