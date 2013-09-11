@@ -3,10 +3,10 @@ listen = 0.0.0.0
 port = 9999
 concurrency = 4
 daemonize = false
-pidfile = slaveapi.pid
+pidfile = /path/to/slaveapi.pid
 
 [secrets]
-credentials_file = credentials.json
+credentials_file = /path/to/credentials.json
 
 [slavealloc]
 api_url = http://slavealloc.build.mozilla.org/api/
@@ -25,6 +25,6 @@ ipmi_username = releng
 
 [logging]
 level = DEBUG
-;file = slaveapi.log
+;file = /path/to/slaveapi.log
 maxsize = 10485760 ; 10MB
 maxfiles = 50
