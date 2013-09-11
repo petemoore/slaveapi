@@ -1,4 +1,4 @@
-from slaveapi import bugzilla_client
+from ..global_state import bugzilla_client
 
 
 class Bug(object):

@@ -1,6 +1,6 @@
 import logging
 
-from . import messages
+from .global_state import messages
 
 log = logging.getLogger(__name__)
 

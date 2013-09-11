@@ -1,8 +1,8 @@
 from flask import jsonify
 from flask.views import MethodView
 
-from .. import results
 from ..actions.status import serialize_results
+from ..global_state import results
 
 
 class Results(MethodView):

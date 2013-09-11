@@ -2,8 +2,8 @@ import logging
 
 from gevent import queue, spawn
 
-from . import messages
-from .actions.status import ActionResult, RUNNING, SUCCESS, FAILURE
+from .actions.status import ActionResult, RUNNING, FAILURE
+from .global_state import messages
 
 log = logging.getLogger(__name__)
 

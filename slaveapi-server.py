@@ -29,11 +29,12 @@ from logging.handlers import RotatingFileHandler
 import os
 from signal import SIGHUP, SIGINT
 from socket import SOL_SOCKET, SO_REUSEADDR
+import sys
 
 import daemon
 from daemon.daemon import get_maximum_file_descriptors
 
-from slaveapi import bugzilla_client, config, processor, messenger
+from slaveapi.global_state import bugzilla_client, config, processor, messenger
 from slaveapi.web import app
 
 log = logging.getLogger(__name__)

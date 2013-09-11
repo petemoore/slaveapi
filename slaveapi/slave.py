@@ -4,13 +4,13 @@ from bzrest.errors import BugNotFound
 
 from dns import resolver
 
-from . import config
 from .clients import inventory, slavealloc
 from .clients.bugzilla import ProblemTrackingBug, RebootBug
 from .clients.ipmi import IPMIInterface
 from .clients.pdu import PDU
 from .clients.ping import ping
 from .clients.ssh import SSHConsole
+from .global_state import config
 
 import logging
 log = logging.getLogger(__name__)
