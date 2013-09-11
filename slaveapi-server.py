@@ -92,6 +92,8 @@ def run(config_file):
     handler = None
 
     while True:
+        # Despite our caller already opening and reading this, we need to do it
+        # here to make sure we pick up any changes during a reload.
         ini = RawConfigParser()
         ini.read(args["<config_file>"])
         load_config(ini)
@@ -143,7 +145,9 @@ if __name__ == "__main__":
     from docopt import docopt
     args = docopt(__doc__)
 
-    pidfile = os.path.abspath("slaveapi.pid")
+    config_ini = RawConfigParser()
+    config_ini.read(args["<config_file>"])
+    pidfile = config_ini.get("server", "pidfile")
 
     if args["stop"]:
         try:
@@ -157,9 +161,6 @@ if __name__ == "__main__":
         os.kill(pid, SIGHUP)
         sys.exit(0)
     elif args["start"]:
-        config_ini = RawConfigParser()
-        config_ini.read(args["<config_file>"])
-
         daemonize = config_ini.getboolean("server", "daemonize")
         loglevel = config_ini.get("logging", "level")
         try:
