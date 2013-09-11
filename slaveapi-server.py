@@ -26,11 +26,7 @@ import logging
 from logging.handlers import RotatingFileHandler
 import os
 from signal import SIGHUP, SIGINT
-import site
 from socket import SOL_SOCKET, SO_REUSEADDR
-import sys
-
-site.addsitedir(os.path.join(os.path.dirname(__file__), "vendor/lib/python"))
 
 import daemon
 from daemon.daemon import get_maximum_file_descriptors
