@@ -13,6 +13,13 @@ import gevent, gevent.core
 from gevent import pywsgi, socket
 from gevent.event import Event
 
+# Need to patch subprocess by hand, because it's provided by a different module
+import gevent_subprocess
+import subprocess
+for patch in ("Popen", "call", "check_call", "check_output"):
+    patched = getattr(gevent_subprocess, patch)
+    setattr(subprocess, patch, patched)
+
 from ConfigParser import RawConfigParser, NoOptionError
 import json
 import logging
