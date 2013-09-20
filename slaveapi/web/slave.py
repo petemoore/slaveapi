@@ -21,7 +21,7 @@ class Reboot(MethodView):
 
         res = results[slave][reboot.__name__].get(requestid, None)
         if res:
-            return res.serialize()
+            return jsonify(res.serialize())
         else:
             reboots = {}
             for id_, res in results[slave][reboot.__name__].iteritems():
