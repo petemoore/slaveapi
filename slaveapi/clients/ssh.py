@@ -50,7 +50,9 @@ class SSHConsole(object):
                     self.client.connect(hostname=self.fqdn, username=username, password=p, timeout=timeout, look_for_keys=False, allow_agent=False)
                     log.info("%s - Connection as %s succeeded!", self.fqdn, username)
                     self.connected = True
-                    break
+                    # Nothing else to do, easiest just to return here rather
+                    # than break out of two loops.
+                    return
                 # We can eat most of these exceptions because we try multiple
                 # different auths. We need to hang on to it to re-raise in case
                 # we ultimately fail.
