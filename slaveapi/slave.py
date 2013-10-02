@@ -77,6 +77,35 @@ class Slave(object):
             self.bug.create()
 
 
+def serialize_slave(slave):
+    """Serializes the state of a Slave. It is up to the caller to ensure that
+       any desired information (slavealloc, etc.) is loaded prior to
+       serialization."""
+    data = {
+        "fqdn": slave.fqdn,
+        "domain": slave.domain,
+        "ip": slave.ip,
+        "colo": slave.colo,
+        "enabled": slave.enabled,
+        "basedir": slave.basedir,
+        "notes": slave.notes,
+    }
+    if slave.bug:
+        data["bug"] = {
+            "id": slave.bug.id_,
+            "is_open": slave.bug.data["is_open"]
+        }
+    if slave.ipmi:
+        data["ipmi"] = {
+            "fqdn": slave.ipmi.fqdn,
+        }
+    if slave.pdu:
+        data["pdu"] = {
+            "fqdn": slave.pdu.fqdn,
+            "port": slave.pdu.port,
+        }
+
+
 def get_reboot_bug(slave):
     try:
         current_reboot_bug = RebootBug(slave.colo, loadInfo=False)

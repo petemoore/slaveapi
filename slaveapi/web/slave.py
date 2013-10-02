@@ -9,6 +9,12 @@ from ..global_state import processor, results
 log = logging.getLogger(__name__)
 
 
+class Slave(MethodView):
+    def get(self, slave):
+        slave = Slave(slave)
+        return jsonify(res.serialize())
+
+
 class Reboot(MethodView):
     def get(self, slave):
         try:
