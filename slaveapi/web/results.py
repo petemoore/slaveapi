@@ -6,5 +6,7 @@ from ..global_state import results
 
 
 class Results(MethodView):
+    """OMG"""
     def get(self):
+        """WTF"""
         return jsonify(serialize_results(results))

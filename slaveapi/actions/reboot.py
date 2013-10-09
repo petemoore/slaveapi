@@ -5,6 +5,7 @@ import logging
 log = logging.getLogger(__name__)
 
 def reboot(name):
+    """I'M A REBOOT AND I'M OK."""
     bug_comment = ""
     slave = Slave(name)
     slave.load_inventory_info()

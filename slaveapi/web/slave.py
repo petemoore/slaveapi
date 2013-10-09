@@ -10,7 +10,10 @@ log = logging.getLogger(__name__)
 
 
 class Reboot(MethodView):
+    """Request a reboot of a slave or get status on a previously requested
+       reboot."""
     def get(self, slave):
+        """BLAH BLAH BLAH DEE BLEE"""
         try:
             requestid = request.args.get("requestid", None)
             if requestid:
@@ -29,6 +32,9 @@ class Reboot(MethodView):
             return jsonify({"reboots": reboots})
 
     def post(self, slave):
+        """POSTing to this endpoint will request a reboot of a slave.
+            
+        """
         res = processor.add_work(slave, reboot)
         results[slave][reboot.__name__][res.id_] = res
 
