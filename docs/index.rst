@@ -13,6 +13,7 @@ Contents:
 
    api
    actions
+   results
 
 Indices and tables
 ==================
