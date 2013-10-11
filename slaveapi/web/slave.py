@@ -26,7 +26,8 @@ class Reboot(MethodView):
 
         Returns:
             The status of the requested specified or the status of all previous
-            reboots. See <insert link here> for details on what status looks like.
+            reboots. See :py:func:`slaveapi.actions.results.ActionResult.serialize`
+            for details on what status looks like.
         """
         try:
             requestid = request.args.get("requestid", None)
@@ -58,8 +59,8 @@ class Reboot(MethodView):
 
         Returns:
             The status of the reboot, after waiting `waittime` for it to
-            complete. See <insert link here> for details on what status
-            looks like.
+            complete. See :py:func:`slaveapi.actions.results.ActionResult.serialize`
+            for details on what status looks like.
         """
         res = processor.add_work(slave, reboot)
         results[slave][reboot.__name__][res.id_] = res

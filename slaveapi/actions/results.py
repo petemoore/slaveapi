@@ -5,6 +5,7 @@ from gevent.event import Event
 PENDING, RUNNING, SUCCESS, FAILURE = range(4)
 
 class ActionResult(object):
+    """Contains basic information about the result of a specific Action."""
     def __init__(self, slave, action, state=PENDING):
         self.id_ = id(self)
         self.slave = slave
@@ -40,6 +41,15 @@ class ActionResult(object):
             return False
 
     def serialize(self, include_requestid=False):
+        """Returns the state and text of this ActionResult in a dict. If
+        include_requestid is True, "requestid" will also be present. Example::
+
+            {
+                "state": 2,
+                "text": "Great success!",
+                "requestid": "234567832"
+            }
+        """
         data = {"state": self.state, "text": self.text}
         if include_requestid:
             data["requestid"] = self.id_
@@ -50,6 +60,28 @@ class ActionResult(object):
 
 
 def serialize_results(results):
+    """Returns a list of ActionResults broken down by slave, action, and
+    requestid. Specific results are serialized by <link to ActionResult.serialize docs>. Example::
+
+        {
+            "linux-ix-slave04": {
+                "reboot": {
+                    "1235543252": {
+                        "state": 2,
+                        "text": "Great success!"
+                    }
+                }
+            },
+            "w64-ix-slave05": {
+                "reboot": {
+                    "5748263211": {
+                        "state": 3,
+                        "text": "Failure :("
+                    }
+                }
+            }
+        }
+    """
     ret = defaultdict(lambda: defaultdict(dict))
     for slave in results:
         for action in results[slave]:
