@@ -1,10 +1,28 @@
-from .status import SUCCESS, FAILURE
+from .results import SUCCESS, FAILURE
 from ..slave import Slave, get_reboot_bug, wait_for_reboot, get_console
 
 import logging
 log = logging.getLogger(__name__)
 
 def reboot(name):
+    """Attempts to reboot the named slave a series of ways, escalating from
+    peacefully to mercilessly. Details of what was attempted and the result
+    are reported into the slave's problem tracking bug at the end. Reboots
+    are attempted through the following means (from most peaceful to least
+    merciful):
+
+    * SSH: Logs into the machine via SSH and reboots it with an \
+        appropriate command.
+
+    * IPMI: Uses the slave's IPMI interface to initiate a hard \
+        reboot. If the slave has no IPMI interface, this is skipped.
+
+    * PDU: Powercycles the slave by turning off the power, and then \
+        turning it back on.
+
+    * Bugzilla: Requests that IT reboot the slave by updating or creating \
+        the appropriate bugs.
+    """
     bug_comment = ""
     slave = Slave(name)
     slave.load_inventory_info()
