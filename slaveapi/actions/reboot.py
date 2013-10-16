@@ -37,21 +37,27 @@ def reboot(name):
         console.reboot()
         alive = wait_for_reboot(slave)
     except:
-        log.exception("%s - Caught exception.", name)
+        log.exception("%s - Caught exception during SSH reboot.", name)
 
     # If that doesn't work, maybe an IPMI reboot will...
     if not alive and slave.ipmi:
         bug_comment += "Failed.\n"
         bug_comment += "Attempting IPMI reboot..."
-        slave.ipmi.powercycle()
-        alive = wait_for_reboot(slave)
+        try:
+            slave.ipmi.powercycle()
+            alive = wait_for_reboot(slave)
+        except:
+            log.exception("%s - Caught exception during IPMI reboot.", name)
 
     # Mayhaps a PDU reboot?
     if not alive and slave.pdu:
         bug_comment += "Failed.\n"
         bug_comment += "Attempting PDU reboot..."
-        slave.pdu.powercycle()
-        alive = wait_for_reboot(slave)
+        try:
+            slave.pdu.powercycle()
+            alive = wait_for_reboot(slave)
+        except:
+            log.exception("%s - Caught exception during PDU reboot.", name)
 
     if alive:
         bug_comment += "Success!"
