@@ -19,6 +19,9 @@ username = releng-inventory-automation
 api_url = https://bugzilla-dev.allizom.org/rest/
 username = bhearsum@mozilla.com
 
+[buildapi]
+api_url = https://buildapi.pvt.build.mozilla.org/ # /buildapi?
+
 [slaves]
 default_domain = build.mozilla.org
 ipmi_username = releng

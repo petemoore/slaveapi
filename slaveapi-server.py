@@ -58,6 +58,7 @@ def load_config(ini):
     config["inventory_username"] = ini.get("inventory", "username")
     config["bugzilla_api"] = slashify(ini.get("bugzilla", "api_url"))
     config["bugzilla_username"] = ini.get("bugzilla", "username")
+    config["buildapi"] = slashify(ini.get("buildapi", "api_url"))
     config["default_domain"] = ini.get("slaves", "default_domain")
     config["ipmi_username"] = ini.get("slaves", "ipmi_username")
 

@@ -47,12 +47,12 @@ class Slave(object):
 
     def load_inventory_info(self):
         log.info("%s - Getting inventory info", self.name)
-        debug = inventory.get_system(
+        info = inventory.get_system(
             self.fqdn, config["inventory_api"], config["inventory_username"],
             config["inventory_password"],
         )
-        if debug["pdu_fqdn"]:
-            self.pdu = PDU(debug["pdu_fqdn"], debug["pdu_port"])
+        if info["pdu_fqdn"]:
+            self.pdu = PDU(info["pdu_fqdn"], info["pdu_port"])
 
     def load_ipmi_info(self):
         # Also per IT, the IPMI Interface, if it exists, can
@@ -76,6 +76,13 @@ class Slave(object):
             log.info("%s - Couldn't find bug, creating it...", self.name)
             self.bug.create()
 
+    def load_recent_job_info(self, n_jobs=1):
+        log.info("%s - Getting recent job info", self.name)
+        self.recent_jobs = get_recent_jobs(
+            self.name, config["buildapi_root"], config["buildapi_username"],
+            config["buildapi_password"], n_jobs=n_jobs
+        )
+
 
 def serialize_slave(slave):
     """Serializes the state of a Slave. It is up to the caller to ensure that
@@ -89,6 +96,10 @@ def serialize_slave(slave):
         "enabled": slave.enabled,
         "basedir": slave.basedir,
         "notes": slave.notes,
+        "bug": None,
+        "ipmi": None,
+        "pdu": None,
+        "recent_jobs": slave.recent_jobs
     }
     if slave.bug:
         data["bug"] = {
