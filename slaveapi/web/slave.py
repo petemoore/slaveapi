@@ -20,7 +20,25 @@ class Slave(MethodView):
 
 
 class Reboot(MethodView):
+    """Request a reboot of a slave or get status on a previously requested
+       reboot."""
+
     def get(self, slave):
+        """Retrieve results from reboots.
+        
+        URL Args:
+            slave (str): The slave to retrieve results for.
+
+        Query Args:
+            requestid (int): If specified, returns only the results for this \
+                specific reboot request. If not passed, results from all \
+                previous reboots are returned.
+
+        Returns:
+            The status of the requested specified or the status of all previous
+            reboots. See :py:func:`slaveapi.actions.results.ActionResult.serialize`
+            for details on what status looks like.
+        """
         try:
             requestid = request.args.get("requestid", None)
             if requestid:
@@ -39,6 +57,21 @@ class Reboot(MethodView):
             return jsonify({"reboots": reboots})
 
     def post(self, slave):
+        """Requests a reboot of a slave.
+        
+        URL Args:
+            slave: The slave to reboot.
+
+        Query Args:
+            waittime: How long to wait (in seconds) for a reboot before \
+                returning a requestid to the user and continuing the work in \
+                the background.
+
+        Returns:
+            The status of the reboot, after waiting `waittime` for it to
+            complete. See :py:func:`slaveapi.actions.results.ActionResult.serialize`
+            for details on what status looks like.
+        """
         res = processor.add_work(slave, reboot)
         results[slave][reboot.__name__][res.id_] = res
 
