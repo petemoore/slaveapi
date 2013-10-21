@@ -16,6 +16,7 @@ class Slave(MethodView):
         slave.load_inventory_info()
         slave.load_ipmi_info()
         slave.load_bug_info()
+        slave.load_recent_job_info()
         return jsonify(res.serialize())
 
 
