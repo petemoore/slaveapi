@@ -40,7 +40,7 @@ class Slave(object):
 
     def load_slavealloc_info(self):
         log.info("%s - Getting slavealloc info", self.name)
-        debug = slavealloc.get_slave(config["slavealloc_api"], name=self.name)
+        debug = slavealloc.get_slave(config["slavealloc_api_url"], name=self.name)
         self.enabled = debug["enabled"]
         self.basedir = debug["basedir"]
         self.notes = debug["notes"]
@@ -48,7 +48,7 @@ class Slave(object):
     def load_inventory_info(self):
         log.info("%s - Getting inventory info", self.name)
         info = inventory.get_system(
-            self.fqdn, config["inventory_api"], config["inventory_username"],
+            self.fqdn, config["inventory_api_url"], config["inventory_username"],
             config["inventory_password"],
         )
         if info["pdu_fqdn"]:
@@ -79,7 +79,7 @@ class Slave(object):
     def load_recent_job_info(self, n_jobs=1):
         log.info("%s - Getting recent job info", self.name)
         self.recent_jobs = get_recent_jobs(
-            self.name, config["buildapi_root"], config["buildapi_username"],
+            self.name, config["buildapi_api_url"], config["buildapi_username"],
             config["buildapi_password"], n_jobs=n_jobs
         )
 

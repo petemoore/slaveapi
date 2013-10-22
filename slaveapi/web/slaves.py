@@ -22,5 +22,5 @@ class Slaves(MethodView):
         purpose = request.args.getlist("purpose")
         environ = request.args.getlist("environ")
         pool = request.args.getlist("pool")
-        slaves = get_slaves(config["slavealloc_api"], purpose, environ, pool)
+        slaves = get_slaves(config["slavealloc_api_url"], purpose, environ, pool)
         return jsonify({"slaves": slaves})

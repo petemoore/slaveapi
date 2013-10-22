@@ -53,12 +53,12 @@ def slashify(url):
 def load_config(ini):
     config["concurrency"] = ini.getint("server", "concurrency")
     # Trailing slashes are important on URLs because urljoin sucks.
-    config["slavealloc_api"] = slashify(ini.get("slavealloc", "api_url"))
-    config["inventory_api"] = slashify(ini.get("inventory", "api_url"))
+    config["slavealloc_api_url"] = slashify(ini.get("slavealloc", "api_url"))
+    config["inventory_api_url"] = slashify(ini.get("inventory", "api_url"))
     config["inventory_username"] = ini.get("inventory", "username")
-    config["bugzilla_api"] = slashify(ini.get("bugzilla", "api_url"))
+    config["bugzilla_api_url"] = slashify(ini.get("bugzilla", "api_url"))
     config["bugzilla_username"] = ini.get("bugzilla", "username")
-    config["buildapi"] = slashify(ini.get("buildapi", "api_url"))
+    config["buildapi_api_url"] = slashify(ini.get("buildapi_api_url", "api_url"))
     config["default_domain"] = ini.get("slaves", "default_domain")
     config["ipmi_username"] = ini.get("slaves", "ipmi_username")
 
@@ -108,7 +108,7 @@ def run(config_file):
         port = ini.getint("server", "port")
 
         bugzilla_client.configure(
-            config["bugzilla_api"],
+            config["bugzilla_api_url"],
             config["bugzilla_username"],
             config["bugzilla_password"],
         )
