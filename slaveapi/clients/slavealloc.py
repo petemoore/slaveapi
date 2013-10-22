@@ -18,11 +18,13 @@ def get_slave(api, id_=None, name=None):
     return requests.get(url).json()
 
 
-def get_slaves(api, purposes=[], environs=[], pools=[]):
+def get_slaves(api, purposes=[], environs=[], pools=[], enabled=None):
     url = furl(api)
     url.path = "slaves"
     url.args["purpose"] = purposes
     url.args["environment"] = environs
     url.args["pool"] = pools
+    if enabled:
+        url.args["enabled"] = int(enabled)
 
     return requests.get(url).json()
