@@ -40,7 +40,7 @@ class ActionResult(object):
         else:
             return False
 
-    def serialize(self, include_requestid=False):
+    def to_dict(self, include_requestid=False):
         """Returns the state and text of this ActionResult in a dict. If
         include_requestid is True, "requestid" will also be present. Example::
 
@@ -59,9 +59,10 @@ class ActionResult(object):
         return self.event.wait(timeout)
 
 
-def serialize_results(results):
-    """Returns a list of ActionResults broken down by slave, action, and
-    requestid. Specific results are serialized by <link to ActionResult.serialize docs>. Example::
+def dictify_results(results):
+    """Returns a dict of ActionResults broken down by slave, action, and
+    requestid. Specific results are processed by
+    :py:func:`slaveapi.actions.results.ActionResults.to_dict`. Example::
 
         {
             "linux-ix-slave04": {
@@ -86,5 +87,5 @@ def serialize_results(results):
     for slave in results:
         for action in results[slave]:
             for requestid, result in results[slave][action].iteritems():
-                ret[slave][action][requestid] = result.serialize()
+                ret[slave][action][requestid] = result.to_dict()
     return ret

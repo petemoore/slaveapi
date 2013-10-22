@@ -6,6 +6,7 @@ from dns import resolver
 
 from .clients import inventory, slavealloc
 from .clients.bugzilla import ProblemTrackingBug, RebootBug
+from .clients.buildapi import get_recent_jobs
 from .clients.ipmi import IPMIInterface
 from .clients.pdu import PDU
 from .clients.ping import ping
@@ -90,38 +91,39 @@ class Slave(object):
             config["buildapi_password"], n_jobs=n_jobs
         )
 
+    def to_dict(self):
+        """Serializes the state of a Slave. It is up to the caller to ensure that
+        any desired information (slavealloc, etc.) is loaded prior to
+        serialization."""
 
-def serialize_slave(slave):
-    """Serializes the state of a Slave. It is up to the caller to ensure that
-       any desired information (slavealloc, etc.) is loaded prior to
-       serialization."""
-    data = {
-        "fqdn": slave.fqdn,
-        "domain": slave.domain,
-        "ip": slave.ip,
-        "colo": slave.colo,
-        "enabled": slave.enabled,
-        "basedir": slave.basedir,
-        "notes": slave.notes,
-        "bug": None,
-        "ipmi": None,
-        "pdu": None,
-        "recent_jobs": slave.recent_jobs
-    }
-    if slave.bug:
-        data["bug"] = {
-            "id": slave.bug.id_,
-            "is_open": slave.bug.data["is_open"]
+        data = {
+            "fqdn": self.fqdn,
+            "domain": self.domain,
+            "ip": self.ip,
+            "colo": self.colo,
+            "enabled": self.enabled,
+            "basedir": self.basedir,
+            "notes": self.notes,
+            "bug": None,
+            "ipmi": None,
+            "pdu": None,
+            "recent_jobs": self.recent_jobs
         }
-    if slave.ipmi:
-        data["ipmi"] = {
-            "fqdn": slave.ipmi.fqdn,
-        }
-    if slave.pdu:
-        data["pdu"] = {
-            "fqdn": slave.pdu.fqdn,
-            "port": slave.pdu.port,
-        }
+        if self.bug:
+            data["bug"] = {
+                "id": self.bug.id_,
+                "is_open": self.bug.data["is_open"]
+            }
+        if self.ipmi:
+            data["ipmi"] = {
+                "fqdn": self.ipmi.fqdn,
+            }
+        if self.pdu:
+            data["pdu"] = {
+                "fqdn": self.pdu.fqdn,
+                "port": self.pdu.port,
+            }
+        return data
 
 
 def get_reboot_bug(slave):

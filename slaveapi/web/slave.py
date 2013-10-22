@@ -13,7 +13,7 @@ class Slave(MethodView):
     def get(self, slave):
         slave = Slave(slave)
         slave.load_all_info()
-        return jsonify(res.serialize())
+        return jsonify(slave.to_dict())
 
 
 class Reboot(MethodView):
@@ -33,7 +33,7 @@ class Reboot(MethodView):
 
         Returns:
             The status of the requested specified or the status of all previous
-            reboots. See :py:func:`slaveapi.actions.results.ActionResult.serialize`
+            reboots. See :py:func:`slaveapi.actions.results.ActionResult.to_dict`
             for details on what status looks like.
         """
         try:
@@ -46,11 +46,11 @@ class Reboot(MethodView):
 
         res = results[slave][reboot.__name__].get(requestid, None)
         if res:
-            return jsonify(res.serialize())
+            return jsonify(res.to_dict())
         else:
             reboots = {}
             for id_, res in results[slave][reboot.__name__].iteritems():
-                reboots[id_] = res.serialize()
+                reboots[id_] = res.to_dict()
             return jsonify({"reboots": reboots})
 
     def post(self, slave):
@@ -66,7 +66,7 @@ class Reboot(MethodView):
 
         Returns:
             The status of the reboot, after waiting `waittime` for it to
-            complete. See :py:func:`slaveapi.actions.results.ActionResult.serialize`
+            complete. See :py:func:`slaveapi.actions.results.ActionResult.to_dict`
             for details on what status looks like.
         """
         res = processor.add_work(slave, reboot)
@@ -75,7 +75,7 @@ class Reboot(MethodView):
         # Wait for the action to complete if requested.
         waittime = int(request.form.get("waittime", 0))
         res.wait(waittime)
-        data = res.serialize(include_requestid=True)
+        data = res.to_dict(include_requestid=True)
         if res.is_done():
             return jsonify(data)
         else:
