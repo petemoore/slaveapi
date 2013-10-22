@@ -38,6 +38,13 @@ class Slave(object):
     def fqdn(self):
         return "%s.%s" % (self.name, self.domain)
 
+    def load_all_info(self):
+        self.load_slavealloc_info()
+        self.load_inventory_info()
+        self.load_ipmi_info()
+        self.load_bug_info()
+        self.load_recent_job_info()
+
     def load_slavealloc_info(self):
         log.info("%s - Getting slavealloc info", self.name)
         debug = slavealloc.get_slave(config["slavealloc_api_url"], name=self.name)
