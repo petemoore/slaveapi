@@ -84,7 +84,7 @@ def setup_logging(level, logfile=None, maxsize=None, maxfiles=None):
 
     logger = logging.getLogger()
     logger.addHandler(handler)
-    logger.setLevel(loglevel)
+    logger.setLevel(level)
 
 def run(config_file):
     log.info("Running with pid %i", os.getpid())

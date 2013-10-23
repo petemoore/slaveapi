@@ -2,6 +2,9 @@ from furl import furl
 
 import requests
 
+import logging
+log = logging.getLogger(__name__)
+
 def get_slave(api, id_=None, name=None):
     if id_ and name:
         raise ValueError("Can't retrieve slave by id and name at the same time.")
@@ -15,6 +18,7 @@ def get_slave(api, id_=None, name=None):
     else:
         raise Exception()
 
+    log.info("Making request to: %s", url)
     return requests.get(str(url)).json()
 
 
@@ -27,4 +31,5 @@ def get_slaves(api, purposes=[], environs=[], pools=[], enabled=None):
     if enabled:
         url.args["enabled"] = int(enabled)
 
+    log.info("Making request to: %s", url)
     return requests.get(str(url)).json()

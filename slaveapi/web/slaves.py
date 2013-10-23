@@ -20,8 +20,8 @@ class Slaves(MethodView):
             A JSON-encoded list of the requested types of slaves.
         """
         purpose = request.args.getlist("purpose")
-        environ = request.args.getlist("environ")
+        environment = request.args.getlist("environment")
         pool = request.args.getlist("pool")
         enabled = request.args.get("enabled", None)
-        slaves = get_slaves(config["slavealloc_api_url"], purpose, environ, pool, enabled)
+        slaves = get_slaves(config["slavealloc_api_url"], purpose, environment, pool, enabled)
         return jsonify({"slaves": slaves})
