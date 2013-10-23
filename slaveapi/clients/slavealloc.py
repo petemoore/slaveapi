@@ -15,7 +15,7 @@ def get_slave(api, id_=None, name=None):
     else:
         raise Exception()
 
-    return requests.get(url).json()
+    return requests.get(str(url)).json()
 
 
 def get_slaves(api, purposes=[], environs=[], pools=[], enabled=None):
@@ -27,4 +27,4 @@ def get_slaves(api, purposes=[], environs=[], pools=[], enabled=None):
     if enabled:
         url.args["enabled"] = int(enabled)
 
-    return requests.get(url).json()
+    return requests.get(str(url)).json()

@@ -12,4 +12,4 @@ def get_recent_jobs(slavename, api, n_jobs=None):
     if n_jobs:
         url.args["numbuilds"] = n_jobs
     log.debug("%s - Making request to %s", slavename, url)
-    return requests.get(url).json()
+    return requests.get(str(url)).json()
