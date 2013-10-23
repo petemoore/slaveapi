@@ -14,7 +14,7 @@ def find_key_value(info, wanted_key):
 
 def get_system(fqdn, api, username, password):
     url = furl(api)
-    url.path = "system"
+    url.path.add("system")
     url.args["format"] = "json"
     url.args["hostname"] = fqdn
     auth = (username, password)

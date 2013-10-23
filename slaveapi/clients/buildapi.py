@@ -7,7 +7,7 @@ log = logging.getLogger(__name__)
 
 def get_recent_jobs(slavename, api, n_jobs=None):
     url = furl(api)
-    url.path = "recent/%s" % slavename
+    url.path.add("recent/%s" % slavename)
     url.args["format"] = "json"
     if n_jobs:
         url.args["numbuilds"] = n_jobs
