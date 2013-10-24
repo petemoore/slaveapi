@@ -87,8 +87,7 @@ class Slave(object):
     def load_recent_job_info(self, n_jobs=1):
         log.info("%s - Getting recent job info", self.name)
         self.recent_jobs = get_recent_jobs(
-            self.name, config["buildapi_api_url"], config["buildapi_username"],
-            config["buildapi_password"], n_jobs=n_jobs
+            self.name, config["buildapi_api_url"], n_jobs=n_jobs
         )
 
     def to_dict(self):

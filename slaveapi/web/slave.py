@@ -5,13 +5,14 @@ from flask.views import MethodView
 
 from ..actions.reboot import reboot
 from ..global_state import processor, results
+from ..slave import Slave as SlaveClass
 
 log = logging.getLogger(__name__)
 
 
 class Slave(MethodView):
     def get(self, slave):
-        slave = Slave(slave)
+        slave = SlaveClass(slave)
         slave.load_all_info()
         return jsonify(slave.to_dict())
 
