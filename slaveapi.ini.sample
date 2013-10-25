@@ -21,7 +21,7 @@ username = bhearsum@mozilla.com
 
 [buildapi]
 # TODO: point at the public/authless interface
-api_url = https://buildapi.pvt.build.mozilla.org/ # /buildapi?
+api_url = https://buildapi.pvt.build.mozilla.org/buildapi/
 
 [slaves]
 default_domain = build.mozilla.org
