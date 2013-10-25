@@ -20,7 +20,6 @@ api_url = https://bugzilla-dev.allizom.org/rest/
 username = bhearsum@mozilla.com
 
 [buildapi]
-# TODO: point at the public/authless interface
 api_url = https://buildapi.pvt.build.mozilla.org/buildapi/
 
 [slaves]
