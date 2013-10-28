@@ -81,8 +81,10 @@ class Slave(object):
         try:
             self.bug.refresh()
         except BugNotFound:
-            log.info("%s - Couldn't find bug, creating it...", self.name)
-            self.bug.create()
+            if createIfMissing:
+                log.info("%s - Couldn't find bug, creating it...", self.name)
+                self.bug.create()
+                self.bug.refresh()
 
     def load_recent_job_info(self, n_jobs=1):
         log.info("%s - Getting recent job info", self.name)
@@ -108,7 +110,7 @@ class Slave(object):
             "pdu": None,
             "recent_jobs": self.recent_jobs
         }
-        if self.bug:
+        if self.bug.data:
             data["bug"] = {
                 "id": self.bug.id_,
                 "is_open": self.bug.data["is_open"]
