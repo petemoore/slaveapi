@@ -1,4 +1,4 @@
-from urlparse import urljoin
+from furl import furl
 
 import requests
 
@@ -13,10 +13,13 @@ def find_key_value(info, wanted_key):
         return None
 
 def get_system(fqdn, api, username, password):
-    url = urljoin(api, "system/?format=json&hostname=%s" % fqdn)
+    url = furl(api)
+    url.path.add("system")
+    url.args["format"] = "json"
+    url.args["hostname"] = fqdn
     auth = (username, password)
     log.debug("%s - Making request to %s", fqdn, url)
-    info = requests.get(url, auth=auth).json()["objects"][0]
+    info = requests.get(str(url), auth=auth).json()["objects"][0]
 
     # We do some post processing because PDUs are buried in the key/value store
     # for some hosts.

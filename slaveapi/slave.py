@@ -6,6 +6,7 @@ from dns import resolver
 
 from .clients import inventory, slavealloc
 from .clients.bugzilla import ProblemTrackingBug, RebootBug
+from .clients.buildapi import get_recent_jobs
 from .clients.ipmi import IPMIInterface
 from .clients.pdu import PDU
 from .clients.ping import ping
@@ -38,21 +39,28 @@ class Slave(object):
     def fqdn(self):
         return "%s.%s" % (self.name, self.domain)
 
+    def load_all_info(self):
+        self.load_slavealloc_info()
+        self.load_inventory_info()
+        self.load_ipmi_info()
+        self.load_bug_info()
+        self.load_recent_job_info()
+
     def load_slavealloc_info(self):
         log.info("%s - Getting slavealloc info", self.name)
-        debug = slavealloc.get_slave(config["slavealloc_api"], name=self.name)
+        debug = slavealloc.get_slave(config["slavealloc_api_url"], name=self.name)
         self.enabled = debug["enabled"]
         self.basedir = debug["basedir"]
         self.notes = debug["notes"]
 
     def load_inventory_info(self):
         log.info("%s - Getting inventory info", self.name)
-        debug = inventory.get_system(
-            self.fqdn, config["inventory_api"], config["inventory_username"],
+        info = inventory.get_system(
+            self.fqdn, config["inventory_api_url"], config["inventory_username"],
             config["inventory_password"],
         )
-        if debug["pdu_fqdn"]:
-            self.pdu = PDU(debug["pdu_fqdn"], debug["pdu_port"])
+        if info["pdu_fqdn"]:
+            self.pdu = PDU(info["pdu_fqdn"], info["pdu_port"])
 
     def load_ipmi_info(self):
         # Also per IT, the IPMI Interface, if it exists, can
@@ -73,8 +81,50 @@ class Slave(object):
         try:
             self.bug.refresh()
         except BugNotFound:
-            log.info("%s - Couldn't find bug, creating it...", self.name)
-            self.bug.create()
+            if createIfMissing:
+                log.info("%s - Couldn't find bug, creating it...", self.name)
+                self.bug.create()
+                self.bug.refresh()
+
+    def load_recent_job_info(self, n_jobs=1):
+        log.info("%s - Getting recent job info", self.name)
+        self.recent_jobs = get_recent_jobs(
+            self.name, config["buildapi_api_url"], n_jobs=n_jobs
+        )
+
+    def to_dict(self):
+        """Serializes the state of a Slave. It is up to the caller to ensure that
+        any desired information (slavealloc, etc.) is loaded prior to
+        serialization."""
+
+        data = {
+            "fqdn": self.fqdn,
+            "domain": self.domain,
+            "ip": self.ip,
+            "colo": self.colo,
+            "enabled": self.enabled,
+            "basedir": self.basedir,
+            "notes": self.notes,
+            "bug": None,
+            "ipmi": None,
+            "pdu": None,
+            "recent_jobs": self.recent_jobs
+        }
+        if self.bug.data:
+            data["bug"] = {
+                "id": self.bug.id_,
+                "is_open": self.bug.data["is_open"]
+            }
+        if self.ipmi:
+            data["ipmi"] = {
+                "fqdn": self.ipmi.fqdn,
+            }
+        if self.pdu:
+            data["pdu"] = {
+                "fqdn": self.pdu.fqdn,
+                "port": self.pdu.port,
+            }
+        return data
 
 
 def get_reboot_bug(slave):

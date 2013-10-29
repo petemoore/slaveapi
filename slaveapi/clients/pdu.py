@@ -21,6 +21,7 @@ class PDU(object):
     base_oid = "1.3.6.1.4.1.1718.3.2.3.1.11"
     def __init__(self, fqdn, port):
         self.fqdn = fqdn
+        self.port = port
         self.tower, self.infeed, self.outlet = self._parse_port(port)
 
     def poweroff(self):

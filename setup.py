@@ -26,5 +26,8 @@ setup(
         "docopt>=0.6.1",
         "python-daemon>=1.5.5",
         "gevent_subprocess==0.1.1",
+        "furl>=0.3.5",
+        "orderedmultidict>=0.7.1",
+        "pytz>=2013.7",
     ],
 )

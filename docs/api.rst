@@ -8,7 +8,7 @@ Endpoints
     :members: get
 
 
-/slave/:slave/action/reboot
+/slaves/:slave/actions/reboot
 ===========================
 .. autoclass:: slaveapi.web.slave.Reboot
     :members: post, get
