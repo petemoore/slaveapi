@@ -1,8 +1,11 @@
+from os import path
 import time
 
 from bzrest.errors import BugNotFound
 
 from dns import resolver
+
+from furl import furl
 
 from .clients import inventory, slavealloc
 from .clients.bugzilla import ProblemTrackingBug, RebootBug
@@ -48,10 +51,18 @@ class Slave(object):
 
     def load_slavealloc_info(self):
         log.info("%s - Getting slavealloc info", self.name)
-        debug = slavealloc.get_slave(config["slavealloc_api_url"], name=self.name)
-        self.enabled = debug["enabled"]
-        self.basedir = debug["basedir"].rstrip("/")
-        self.notes = debug["notes"]
+        info = slavealloc.get_slave(config["slavealloc_api_url"], name=self.name)
+        master_info = slavealloc.get_master(config["slavealloc_api_url"], info["current_masterid"])
+        self.enabled = info["enabled"]
+        self.basedir = info["basedir"].rstrip("/")
+        # Because we always work with UNIX style paths in SlaveAPI we need
+        # to massage basedir when a Windows style one is detected.
+        if self.basedir[1] == ":":
+            (drive, dir_) = self.basedir.split(":")
+            self.basedir = "/" + drive[0] + dir_.replace("\\", "/")
+        self.notes = info["notes"]
+        self.master = master_info["fqdn"]
+        self.master_url = furl().set(scheme="http", host=self.master, port=master_info["http_port"])
 
     def load_inventory_info(self):
         log.info("%s - Getting inventory info", self.name)
