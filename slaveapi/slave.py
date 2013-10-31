@@ -50,7 +50,7 @@ class Slave(object):
         log.info("%s - Getting slavealloc info", self.name)
         debug = slavealloc.get_slave(config["slavealloc_api_url"], name=self.name)
         self.enabled = debug["enabled"]
-        self.basedir = debug["basedir"]
+        self.basedir = debug["basedir"].rstrip("/")
         self.notes = debug["notes"]
 
     def load_inventory_info(self):

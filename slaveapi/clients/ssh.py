@@ -26,10 +26,12 @@ class SSHConsole(object):
     # shutdown for a few seconds so that we have time to read the exit status
     # of the shutdown command.
     reboot_commands = ["reboot", "sudo reboot", "shutdown -f -t 3 -r"]
+    max_prompt_size = 100
 
-    def __init__(self, fqdn, credentials):
+    def __init__(self, fqdn, credentials, pty_width=1000):
         self.fqdn = fqdn
         self.credentials = credentials
+        self.pty_width = pty_width
         self.connected = False
         self.client = SSHClient()
         self.client.set_missing_host_key_policy(IgnorePolicy())
@@ -77,6 +79,9 @@ class SSHConsole(object):
            shell, which makes it more complicated than it needs to be. Rather
            than letting the SSH server deal with retrieving the return code,
            we need to get it through the shell by parsing $?."""
+        if (len(cmd) + self.max_prompt_size) > self.pty_width:
+            raise ValueError("Command '%s' exceeds pty width, cannot run it." % cmd)
+
         if not self.connected:
             self.connect()
 
@@ -145,7 +150,7 @@ class SSHConsole(object):
 
     def _get_shell(self):
         shell = self.client.get_transport().open_session()
-        shell.get_pty()
+        shell.get_pty(width=self.pty_width)
         shell.invoke_shell()
         shell.sendall("clear\r\n")
         # We need to sleep a little bit here to give the shell time to log in.
