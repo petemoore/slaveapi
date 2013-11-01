@@ -14,12 +14,17 @@ MAX_SHUTDOWN_WAIT_TIME = 60 * 60 * 5 # 5 hours
 def shutdown_buildslave(name):
     slave = Slave(name)
     slave.load_slavealloc_info()
-    console = get_console(slave)
 
+    # We do graceful shutdowns through the master's web interface because it's
+    # the simplest way that works across all platforms.
     log.info("%s - Starting graceful shutdown.", slave.name)
     shutdown_url = furl(slave.master_url)
     shutdown_url.path = "/buildslaves/%s/shutdown" % slave.name
     try:
+        # Disabling redirects is important here - otherwise we'll load a
+        # potentially expensive page from the Buildbot master. The response
+        # code is good enough to confirm whether or not initiating this worked
+        # or not anyways.
         requests.post(str(shutdown_url), allow_redirects=False)
     except requests.RequestException:
         log.exception("%s - Failed to initiate graceful shutdown.", slave.name)
@@ -27,6 +32,7 @@ def shutdown_buildslave(name):
 
     twistd_log = "%s/%s" % (slave.basedir, "twistd.log")
     start = time.time()
+    console = get_console(slave)
     while time.time() - start < MAX_SHUTDOWN_WAIT_TIME:
         rc, output = console.run_cmd("tail -n1 %s" % twistd_log)
         if "Server Shut Down" in output:

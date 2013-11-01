@@ -26,6 +26,12 @@ class SSHConsole(object):
     # shutdown for a few seconds so that we have time to read the exit status
     # of the shutdown command.
     reboot_commands = ["reboot", "sudo reboot", "shutdown -f -t 3 -r"]
+    # Best guess at the maximum possible width of any shell prompt we encounter.
+    # This needs to be tracked because we run commands through a pty, and if
+    # len(prompt) + len(cmd) is more than the pty width, a newline will show up
+    # in the output partway through the command. This is really far from ideal
+    # but until we can run commands through ssh "exec" instead of a pty, we're
+    # stuck with it.
     max_prompt_size = 100
 
     def __init__(self, fqdn, credentials, pty_width=1000):
