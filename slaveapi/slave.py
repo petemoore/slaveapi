@@ -19,6 +19,9 @@ from .global_state import config
 import logging
 log = logging.getLogger(__name__)
 
+def windows2msys(path_):
+    (drive, therest) = path_.split(":")
+    return "/" + drive[0] + therest.replace("\\", "/")
 
 class Slave(object):
     def __init__(self, name):
@@ -58,8 +61,7 @@ class Slave(object):
         # Because we always work with UNIX style paths in SlaveAPI we need
         # to massage basedir when a Windows style one is detected.
         if self.basedir[1] == ":":
-            (drive, dir_) = self.basedir.split(":")
-            self.basedir = "/" + drive[0] + dir_.replace("\\", "/")
+            self.basedir = windows2msys(self.basedir)
         self.notes = info["notes"]
         self.master = master_info["fqdn"]
         self.master_url = furl().set(scheme="http", host=self.master, port=master_info["http_port"])
