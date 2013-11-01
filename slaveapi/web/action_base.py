@@ -1,4 +1,5 @@
 import logging
+from ..global_state import processor, results
 
 from flask import jsonify, make_response, request, Response
 from flask.views import MethodView
@@ -29,8 +30,8 @@ class ActionView(MethodView):
                 action_results[id_] = res.to_dict()
             return jsonify({self.action.__name__: action_results})
 
-    def post(self, slave):
-        res = processor.add_work(slave, self.action)
+    def post(self, slave, *action_args, **action_kwargs):
+        res = processor.add_work(slave, self.action, *action_args, **action_kwargs)
         results[slave][self.action.__name__][res.id_] = res
 
         # Wait for the action to complete if requested.
