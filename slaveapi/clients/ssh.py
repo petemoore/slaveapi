@@ -93,13 +93,13 @@ class SSHConsole(object):
 
         log.debug("%s - Running %s", self.fqdn, cmd)
         try:
+            output = None
+            rc = None
             shell = self._get_shell()
             shell.sendall("%s\r\necho $?\r\n" % cmd)
 
             start = time.time()
             data = ""
-            output = None
-            rc = None
             while time.time() - start < timeout:
                 while shell.recv_ready():
                     data += shell.recv(1024)
