@@ -11,7 +11,10 @@ log = logging.getLogger(__name__)
 class ActionView(MethodView):
     """Abstract base class for views that expose actions. Subclasses must
     set "action", which should be a callable that accepts a slave name as
-    its first argument. If the action requires extra arguments (eg, arguments
+    its first argument. Subclasses should set this in their __init__ rather
+    than as a class attribute, otherwise Python will turn it into a class
+    method and pass along "self" to the action -- which actions don't generally
+    expect. If the action requires extra arguments (eg, arguments
     sent through POST data), the subclass should override the "post" method
     and pass them to it."""
     action = NotImplementedError

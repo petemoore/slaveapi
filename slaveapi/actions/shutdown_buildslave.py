@@ -3,6 +3,7 @@ import requests
 import time
 
 from .results import SUCCESS, FAILURE
+from ..clients.ssh import RemoteCommandError
 from ..slave import Slave, get_console
 
 import logging
@@ -39,10 +40,14 @@ def shutdown_buildslave(name):
     start = time.time()
     console = get_console(slave)
     while time.time() - start < MAX_SHUTDOWN_WAIT_TIME:
-        rc, output = console.run_cmd("tail -n1 %s" % twistd_log)
-        if "Server Shut Down" in output:
-            return SUCCESS, "Shutdown succeeded."
-        else:
+        try:
+            rc, output = console.run_cmd("tail -n1 %s" % twistd_log)
+            if "Server Shut Down" in output:
+                return SUCCESS, "Shutdown succeeded."
+            else:
+                time.sleep(30)
+        except RemoteCommandError:
+            log.debug("Caught error when waiting for shutdown, trying again...", exc_info=True)
             time.sleep(30)
     else:
         return FAILURE, "Couldn't confirm shutdown."

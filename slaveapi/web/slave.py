@@ -23,12 +23,17 @@ class Reboot(ActionView):
     reboot. See :py:class:`slaveapi.web.action_base.ActionView` for details
     on GET and POST methods. See :py:func:`slaveapi.actions.reboot.reboot` for
     details on how reboots are performed."""
-    action = reboot
+
+    def __init__(self, *args, **kwargs):
+        self.action = reboot
+        ActionView.__init__(self, *args, **kwargs)
 
 
-class ShutdownBuildslave(MethodView):
+class ShutdownBuildslave(ActionView):
     """Request a shutdown of a buildslave or get status on a previously requested
     shutdown. See :py:class:`slaveapi.web.action_base.ActionView` for details
     on GET and POST methods. See :py:func:`slaveapi.actions.shutdown_buildslave.shutdown_buildslave`
     for details on how buildslave shutdowns are performed."""
-    action = shutdown_buildslave
+    def __init__(self, *args, **kwargs):
+        self.action = shutdown_buildslave
+        ActionView.__init__(self, *args, **kwargs)
