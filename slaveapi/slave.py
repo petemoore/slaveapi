@@ -1,4 +1,3 @@
-from os import path
 import time
 
 from bzrest.errors import BugNotFound

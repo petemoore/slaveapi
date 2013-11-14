@@ -1,5 +1,4 @@
 import logging
-from ..global_state import processor, results
 
 from flask import jsonify, make_response, request, Response
 from flask.views import MethodView
