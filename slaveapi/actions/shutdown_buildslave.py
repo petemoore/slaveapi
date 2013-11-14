@@ -12,6 +12,11 @@ log = logging.getLogger(__name__)
 MAX_SHUTDOWN_WAIT_TIME = 60 * 60 * 5 # 5 hours
 
 def shutdown_buildslave(name):
+    """Attempts to gracefully shut down the buildslave process on the named
+    slave. In order to support Windows, this must be done by contacting the
+    Buildbot Master the slave talks to, and requesting the shut down there.
+    (Slave-side graceful shutdown doesn't work on Windows.) Once initiated,
+    the shutdown is confirmed by watching the slave's twistd.log file."""
     slave = Slave(name)
     slave.load_slavealloc_info()
 

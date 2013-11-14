@@ -19,8 +19,16 @@ class Slave(MethodView):
 
 
 class Reboot(ActionView):
+    """Request a reboot of a slave or get status on a previously requested
+    reboot. See :py:class:`slaveapi.web.action_base.ActionView` for details
+    on GET and POST methods. See :py:func:`slaveapi.actions.reboot.reboot` for
+    details on how reboots are performed."""
     action = reboot
 
 
 class ShutdownBuildslave(MethodView):
+    """Request a shutdown of a buildslave or get status on a previously requested
+    shutdown. See :py:class:`slaveapi.web.action_base.ActionView` for details
+    on GET and POST methods. See :py:func:`slaveapi.actions.shutdown_buildslave.shutdown_buildslave`
+    for details on how buildslave shutdowns are performed."""
     action = shutdown_buildslave
