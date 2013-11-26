@@ -1,10 +1,11 @@
 import logging
 
-from flask import Response, make_response, request, jsonify
+from flask import jsonify
 from flask.views import MethodView
 
+from .action_base import ActionView
 from ..actions.reboot import reboot
-from ..global_state import processor, results
+from ..actions.shutdown_buildslave import shutdown_buildslave
 from ..slave import Slave as SlaveClass
 
 log = logging.getLogger(__name__)
@@ -17,67 +18,22 @@ class Slave(MethodView):
         return jsonify(slave.to_dict())
 
 
-class Reboot(MethodView):
+class Reboot(ActionView):
     """Request a reboot of a slave or get status on a previously requested
-       reboot."""
+    reboot. See :py:class:`slaveapi.web.action_base.ActionView` for details
+    on GET and POST methods. See :py:func:`slaveapi.actions.reboot.reboot` for
+    details on how reboots are performed."""
 
-    def get(self, slave):
-        """Retrieve results from reboots.
-        
-        URL Args:
-            slave (str): The slave to retrieve results for.
+    def __init__(self, *args, **kwargs):
+        self.action = reboot
+        ActionView.__init__(self, *args, **kwargs)
 
-        Query Args:
-            requestid (int): If specified, returns only the results for this \
-                specific reboot request. If not passed, results from all \
-                previous reboots are returned.
 
-        Returns:
-            The status of the requested specified or the status of all previous
-            reboots. See :py:func:`slaveapi.actions.results.ActionResult.to_dict`
-            for details on what status looks like.
-        """
-        try:
-            requestid = request.args.get("requestid", None)
-            if requestid:
-                requestid = int(requestid)
-                log.debug("%s - Got requestid: %s", slave, requestid)
-        except TypeError:
-            return Response(response="Couldn't parse requestid", status=400)
-
-        res = results[slave][reboot.__name__].get(requestid, None)
-        if res:
-            return jsonify(res.to_dict())
-        else:
-            reboots = {}
-            for id_, res in results[slave][reboot.__name__].iteritems():
-                reboots[id_] = res.to_dict()
-            return jsonify({"reboots": reboots})
-
-    def post(self, slave):
-        """Requests a reboot of a slave.
-        
-        URL Args:
-            slave: The slave to reboot.
-
-        Query Args:
-            waittime: How long to wait (in seconds) for a reboot before \
-                returning a requestid to the user and continuing the work in \
-                the background.
-
-        Returns:
-            The status of the reboot, after waiting `waittime` for it to
-            complete. See :py:func:`slaveapi.actions.results.ActionResult.to_dict`
-            for details on what status looks like.
-        """
-        res = processor.add_work(slave, reboot)
-        results[slave][reboot.__name__][res.id_] = res
-
-        # Wait for the action to complete if requested.
-        waittime = int(request.form.get("waittime", 0))
-        res.wait(waittime)
-        data = res.to_dict(include_requestid=True)
-        if res.is_done():
-            return jsonify(data)
-        else:
-            return make_response(jsonify(data), 202)
+class ShutdownBuildslave(ActionView):
+    """Request a shutdown of a buildslave or get status on a previously requested
+    shutdown. See :py:class:`slaveapi.web.action_base.ActionView` for details
+    on GET and POST methods. See :py:func:`slaveapi.actions.shutdown_buildslave.shutdown_buildslave`
+    for details on how buildslave shutdowns are performed."""
+    def __init__(self, *args, **kwargs):
+        self.action = shutdown_buildslave
+        ActionView.__init__(self, *args, **kwargs)

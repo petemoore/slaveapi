@@ -1,7 +1,10 @@
-=========
-Endpoints
-=========
+===
+API
+===
 
+---------
+Endpoints
+---------
 /results
 ========
 .. autoclass:: slaveapi.web.results.Results
@@ -9,9 +12,19 @@ Endpoints
 
 
 /slaves/:slave/actions/reboot
-===========================
+=============================
 .. autoclass:: slaveapi.web.slave.Reboot
-    :members: post, get
 
-    For details on how reboots are performed, see the documentation for
-    :py:func:`slaveapi.actions.reboot.reboot`.
+
+/slaves/:slave/actions/shutdown_buildslave
+==========================================
+.. autoclass:: slaveapi.web.slave.ShutdownBuildslave
+
+
+-------
+Helpers
+-------
+ActionView
+==========
+.. autoclass:: slaveapi.web.action_base.ActionView
+    :members: get, post

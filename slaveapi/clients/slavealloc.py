@@ -33,3 +33,9 @@ def get_slaves(api, purposes=[], environs=[], pools=[], enabled=None):
 
     log.info("Making request to: %s", url)
     return requests.get(str(url)).json()
+
+
+def get_master(api, id_):
+    url = furl(api)
+    url.path.add("masters/%s" % id_)
+    return requests.get(str(url)).json()
