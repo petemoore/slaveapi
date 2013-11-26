@@ -42,7 +42,9 @@ class ActionResult(object):
 
     def to_dict(self, include_requestid=False):
         """Returns the state and text of this ActionResult in a dict. If
-        include_requestid is True, "requestid" will also be present. Example::
+        include_requestid is True, "requestid" will also be present. Example:
+
+        .. code-block:: python
 
             {
                 "state": 2,
@@ -62,7 +64,9 @@ class ActionResult(object):
 def dictify_results(results):
     """Returns a dict of ActionResults broken down by slave, action, and
     requestid. Specific results are processed by
-    :py:func:`slaveapi.actions.results.ActionResults.to_dict`. Example::
+    :py:func:`slaveapi.actions.results.ActionResults.to_dict`. Example:
+
+    .. code-block:: python
 
         {
             "linux-ix-slave04": {

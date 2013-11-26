@@ -5,7 +5,7 @@ Results
 ActionResult
 ============
 .. autoclass:: slaveapi.actions.results.ActionResult
-    :members: dictify
+    :members: to_dict
 
 dictify_results
 ===============
