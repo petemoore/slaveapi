@@ -154,17 +154,27 @@ class SSHConsole(object):
             # XXX: raise a better exception here
             raise RemoteCommandError("Unable to reboot %s after trying all commands" % self.fqdn)
 
-    def _get_shell(self):
+    def _get_shell(self, timeout=180):
         shell = self.client.get_transport().open_session()
         shell.get_pty(width=self.pty_width)
         shell.invoke_shell()
-        shell.sendall("clear\r\n")
-        # We need to sleep a little bit here to give the shell time to log in.
-        # This won't work in 100% of cases, but it should be generally OK.
-        time.sleep(5)
-        # Once that's done we should eat whatever is in the stdout buffer so
-        # that our consumer doesn't need to deal with it.
-        if shell.recv_ready():
-            shell.recv(1024)
-        return shell
-
+        # Even after the SSH connection is made, some shells may take awhile
+        # to launch (see bug 943508 for an example). Because of this, we
+        # need to verify that the shell is ready before returning. We can use
+        # a magic string ("SHELL_READY") to do this -- once we see it in the
+        # output, we know the shell is responsive. It may look a little strange
+        # to send this in each iteration of the loop but because we're waiting
+        # on the shell to be ready we can't rely on any characters we send to
+        # be buffered - we need to resend them over and over.
+        for i in range(timeout/2):
+            shell.sendall("\r\necho SHELL_READY\r\n")
+            data = ""
+            time.sleep(1)
+            while shell.recv_ready():
+                data += shell.recv(1024)
+            if "SHELL_READY" in data:
+                return shell
+            else:
+                time.sleep(1)
+        else:
+            raise RemoteCommandError("Shell never became ready.")
