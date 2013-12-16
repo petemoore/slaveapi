@@ -1,4 +1,5 @@
 from .results import SUCCESS, FAILURE
+from ..clients.ping import ping
 from ..slave import Slave, get_reboot_bug, wait_for_reboot, get_console
 
 import logging
@@ -31,11 +32,12 @@ def reboot(name):
     bug_comment += "Attempting SSH reboot..."
 
     alive = False
-    # Try an SSH reboot first of all...
+    # If the slave is pingable, try an SSH reboot...
     try:
-        console = get_console(slave)
-        console.reboot()
-        alive = wait_for_reboot(slave)
+        if ping(slave.fqdn):
+            console = get_console(slave)
+            console.reboot()
+            alive = wait_for_reboot(slave)
     except:
         log.exception("%s - Caught exception during SSH reboot.", name)
 
