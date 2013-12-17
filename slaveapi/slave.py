@@ -39,6 +39,8 @@ class Slave(object):
         self.basedir = None
         self.notes = None
         self.pdu = None
+        self.master = None
+        self.master_url = None
 
     @property
     def fqdn(self):
@@ -62,8 +64,9 @@ class Slave(object):
         if self.basedir[1] == ":":
             self.basedir = windows2msys(self.basedir)
         self.notes = info["notes"]
-        self.master = master_info["fqdn"]
-        self.master_url = furl().set(scheme="http", host=self.master, port=master_info["http_port"])
+        self.master = master_info.get("fqdn", None)
+        if self.master:
+            self.master_url = furl().set(scheme="http", host=self.master, port=master_info["http_port"])
 
     def load_inventory_info(self):
         log.info("%s - Getting inventory info", self.name)

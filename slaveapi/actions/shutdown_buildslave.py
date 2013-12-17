@@ -21,6 +21,9 @@ def shutdown_buildslave(name):
     slave = Slave(name)
     slave.load_slavealloc_info()
 
+    if not slave.master_url:
+        return SUCCESS, "%s - No master set, nothing to do!"
+
     # We do graceful shutdowns through the master's web interface because it's
     # the simplest way that works across all platforms.
     log.info("%s - Starting graceful shutdown.", slave.name)
