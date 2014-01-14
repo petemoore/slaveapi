@@ -170,7 +170,7 @@ if __name__ == "__main__":
             logfile = None
         if logfile:
             logsize = config_ini.getint("logging", "maxsize")
-            log_maxfiles = config_ini.get("logging", "maxfiles")
+            log_maxfiles = config_ini.getint("logging", "maxfiles")
         else:
             logsize = None
             log_maxfiles = None
