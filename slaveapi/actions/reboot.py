@@ -75,5 +75,5 @@ def reboot(name):
         else:
             slave.reboot_bug = file_reboot_bug(slave)
             status_text += "Filed IT bug for reboot (bug %s)" % slave.reboot_bug.id_
-            slave.bug.add_comment(status_text)
+            slave.bug.add_comment(status_text, data={"status": "REOPENED"})
             return FAILURE, status_text
