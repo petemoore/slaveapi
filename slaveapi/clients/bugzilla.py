@@ -10,6 +10,7 @@ class Bug(object):
 
     def refresh(self):
         self.data = bugzilla_client.get_bug(self.id_)
+        self.id_ = self.data["id"]
 
     def add_comment(self, comment, data={}):
         return bugzilla_client.add_comment(self.id_, comment, data)
@@ -24,6 +25,7 @@ class ProblemTrackingBug(Bug):
 
     def __init__(self, slave_name, *args, **kwargs):
         self.slave_name = slave_name
+        self.reboot_bug = None
         Bug.__init__(self, slave_name, *args, **kwargs)
 
     def create(self):
@@ -41,23 +43,28 @@ class ProblemTrackingBug(Bug):
         self.id_ = resp["id"]
 
 
-class RebootBug(Bug):
-    product = "mozilla.org"
-    component = "Server Operations: DCOps"
+reboot_product = "mozilla.org"
+reboot_component = "Server Operations: DCOps"
+reboot_summary = "%(slave)s is unreachable"
+def get_reboot_bug(slave):
+    qs = "?product=%s&component=%s" % (reboot_product, reboot_component)
+    qs += "&blocks=%s&resolution=---" % slave.bug.id_
+    summary = reboot_summary % {"slave": slave.name}
+    for bug in bugzilla_client.request("GET", "bug" + qs)["bugs"]:
+        if bug["summary"] == summary:
+            return Bug(bug["id"])
+    else:
+        return None
 
-    def __init__(self, colo, *args, **kwargs):
-        self.colo = colo
-        Bug.__init__(self, "reboots-%s" % colo, *args, **kwargs)
-
-    def create(self):
-        data = {
-            "product": self.product,
-            "component": self.component,
-            "summary": "reboot requests for %s" % self.colo,
-            "version": "other",
-            "alias": "reboots-%s" % self.colo,
-            "op_sys": "All",
-            "platform": "All",
-        }
-        resp = bugzilla_client.create_bug(data)
-        self.id_ = resp["id"]
+def file_reboot_bug(slave):
+    data = {
+        "product": reboot_product,
+        "component": reboot_component,
+        "summary": reboot_summary % {"slave": slave.name},
+        "version": "other",
+        "op_sys": "All",
+        "platform": "All",
+        "blocks": slave.bug.id_,
+    }
+    resp = bugzilla_client.create_bug(data)
+    return Bug(resp["id"])

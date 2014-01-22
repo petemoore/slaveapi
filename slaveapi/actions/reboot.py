@@ -1,6 +1,7 @@
 from .results import SUCCESS, FAILURE
+from ..clients.bugzilla import file_reboot_bug
 from ..clients.ping import ping
-from ..slave import Slave, get_reboot_bug, wait_for_reboot, get_console
+from ..slave import Slave, wait_for_reboot, get_console
 
 import logging
 log = logging.getLogger(__name__)
@@ -24,12 +25,12 @@ def reboot(name):
     * Bugzilla: Requests that IT reboot the slave by updating or creating \
         the appropriate bugs.
     """
-    bug_comment = ""
+    status_text = ""
     slave = Slave(name)
     slave.load_inventory_info()
     slave.load_ipmi_info()
     slave.load_bug_info(createIfMissing=True)
-    bug_comment += "Attempting SSH reboot..."
+    status_text += "Attempting SSH reboot..."
 
     alive = False
     # If the slave is pingable, try an SSH reboot...
@@ -43,8 +44,8 @@ def reboot(name):
 
     # If that doesn't work, maybe an IPMI reboot will...
     if not alive and slave.ipmi:
-        bug_comment += "Failed.\n"
-        bug_comment += "Attempting IPMI reboot..."
+        status_text += "Failed.\n"
+        status_text += "Attempting IPMI reboot..."
         try:
             slave.ipmi.powercycle()
             alive = wait_for_reboot(slave)
@@ -53,8 +54,8 @@ def reboot(name):
 
     # Mayhaps a PDU reboot?
     if not alive and slave.pdu:
-        bug_comment += "Failed.\n"
-        bug_comment += "Attempting PDU reboot..."
+        status_text += "Failed.\n"
+        status_text += "Attempting PDU reboot..."
         try:
             slave.pdu.powercycle()
             alive = wait_for_reboot(slave)
@@ -62,19 +63,17 @@ def reboot(name):
             log.exception("%s - Caught exception during PDU reboot.", name)
 
     if alive:
-        bug_comment += "Success!"
-        slave.bug.add_comment(bug_comment)
-        return SUCCESS, bug_comment
+        # To minimize bugspam, no comment is added to the bug if we were
+        # able to bring it back up.
+        status_text += "Success!"
+        return SUCCESS, status_text
     else:
-        # We've done all we can - now we need human involvement to get the
-        # machine back online.
-        reboot_bug = get_reboot_bug(slave)
-        bug_comment += "Failed.\n"
-        bug_comment += "Can't do anything else, human intervention needed."
-        data = {
-            "depends_on": {
-                "add": [reboot_bug.id_],
-            }
-        }
-        slave.bug.add_comment(bug_comment, data)
-        return FAILURE, bug_comment
+        status_text += "Failed.\n"
+        if slave.reboot_bug:
+            status_text += "Slave already has reboot bug (%s), nothing to do." % slave.reboot_bug.id_
+            return FAILURE, status_text
+        else:
+            slave.reboot_bug = file_reboot_bug(slave)
+            status_text += "Filed IT bug for reboot (bug %s)" % slave.reboot_bug.id_
+            slave.bug.add_comment(status_text)
+            return FAILURE, status_text

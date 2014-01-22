@@ -7,7 +7,7 @@ from dns import resolver
 from furl import furl
 
 from .clients import inventory, slavealloc
-from .clients.bugzilla import ProblemTrackingBug, RebootBug
+from .clients.bugzilla import ProblemTrackingBug, get_reboot_bug
 from .clients.buildapi import get_recent_jobs
 from .clients.ipmi import IPMIInterface
 from .clients.pdu import PDU
@@ -35,6 +35,7 @@ class Slave(object):
         self.colo = self.fqdn.split(".")[-3]
         self.ipmi = None
         self.bug = None
+        self.reboot_bug = None
         self.enabled = None
         self.basedir = None
         self.notes = None
@@ -100,6 +101,7 @@ class Slave(object):
                 log.info("%s - Couldn't find bug, creating it...", self.name)
                 self.bug.create()
                 self.bug.refresh()
+        self.reboot_bug = get_reboot_bug(self)
 
     def load_recent_job_info(self, n_jobs=1):
         log.info("%s - Getting recent job info", self.name)
@@ -141,24 +143,6 @@ class Slave(object):
             }
         return data
 
-
-def get_reboot_bug(slave):
-    try:
-        current_reboot_bug = RebootBug(slave.colo, loadInfo=False)
-        current_reboot_bug.refresh()
-        # if it's open, attach slave to it
-        if current_reboot_bug.data["is_open"]:
-            return current_reboot_bug
-        else:
-            current_reboot_bug.update({"alias": None})
-            # New reboot bug will be created below.
-    except BugNotFound:
-        # Will be created below.
-        pass
-    log.info("%s - Creating new reboot bug for %s", slave.name, slave.colo)
-    new_reboot_bug = RebootBug(slave.colo, loadInfo=False)
-    new_reboot_bug.create()
-    return new_reboot_bug
 
 def is_alive(slave, timeout=300):
     log.info("%s - Checking for signs of life", slave.name)
