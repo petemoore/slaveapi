@@ -29,7 +29,7 @@ def reboot(name):
     slave = Slave(name)
     slave.load_inventory_info()
     slave.load_ipmi_info()
-    slave.load_bug_info(createIfMissing=True)
+    slave.load_bug_info(createIfMissing=False)
     status_text += "Attempting SSH reboot..."
 
     alive = False
@@ -73,7 +73,9 @@ def reboot(name):
             status_text += "Slave already has reboot bug (%s), nothing to do." % slave.reboot_bug.id_
             return FAILURE, status_text
         else:
+            if not slave.bug:
+                slave.load_bug_info(createIfMissing=True)
             slave.reboot_bug = file_reboot_bug(slave)
             status_text += "Filed IT bug for reboot (bug %s)" % slave.reboot_bug.id_
-            slave.bug.add_comment(status_text, data={"status": "REOPENED"})
+            slave.bug.add_comment(status_text, data={"status": "NEW"})
             return FAILURE, status_text

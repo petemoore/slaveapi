@@ -96,12 +96,14 @@ class Slave(object):
         self.bug = ProblemTrackingBug(self.name, loadInfo=False)
         try:
             self.bug.refresh()
+            self.reboot_bug = get_reboot_bug(self)
         except BugNotFound:
             if createIfMissing:
                 log.info("%s - Couldn't find bug, creating it...", self.name)
                 self.bug.create()
                 self.bug.refresh()
-        self.reboot_bug = get_reboot_bug(self)
+            else:
+                self.bug = None
 
     def load_recent_job_info(self, n_jobs=1):
         log.info("%s - Getting recent job info", self.name)
