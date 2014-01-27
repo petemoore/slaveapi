@@ -1,6 +1,7 @@
 from .results import SUCCESS, FAILURE
 from ..clients.bugzilla import file_reboot_bug
 from ..clients.ping import ping
+from ..clients.ssh import RemoteCommandError
 from ..slave import Slave, wait_for_reboot, get_console
 
 import logging
@@ -37,7 +38,16 @@ def reboot(name):
     try:
         if ping(slave.fqdn):
             console = get_console(slave)
-            console.reboot()
+            # Sometimes the SSH session goes away before the command can
+            # successfully complete. In order to avoid misinterpreting that
+            # as some sort of other failure, we need to assume that it suceeds.
+            # wait_for_reboot will confirm that the slave goes down before
+            # coming back up, so this is OK to do.
+            try:
+                console.reboot()
+            except RemoteCommandError:
+                log.warning("%s - Eating RemoteCommandError during SSH reboot.", name)
+                pass
             alive = wait_for_reboot(slave)
     except:
         log.exception("%s - Caught exception during SSH reboot.", name)
