@@ -129,7 +129,7 @@ class Slave(object):
             "pdu": None,
             "recent_jobs": self.recent_jobs
         }
-        if self.bug.data:
+        if self.bug and self.bug.data:
             data["bug"] = {
                 "id": self.bug.id_,
                 "is_open": self.bug.data["is_open"]
