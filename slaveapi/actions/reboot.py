@@ -1,7 +1,6 @@
 from .results import SUCCESS, FAILURE
 from ..clients.bugzilla import file_reboot_bug
 from ..clients.ping import ping
-from ..clients.ssh import RemoteCommandError
 from ..slave import Slave, wait_for_reboot, get_console
 
 import logging
@@ -45,8 +44,8 @@ def reboot(name):
             # coming back up, so this is OK to do.
             try:
                 console.reboot()
-            except RemoteCommandError:
-                log.warning("%s - Eating RemoteCommandError during SSH reboot.", name)
+            except:
+                log.warning("%s - Eating exception during SSH reboot.", name, exc_info=True)
                 pass
             alive = wait_for_reboot(slave)
     except:
@@ -57,7 +56,11 @@ def reboot(name):
         status_text += "Failed.\n"
         status_text += "Attempting IPMI reboot..."
         try:
-            slave.ipmi.powercycle()
+            try:
+                slave.ipmi.powercycle()
+            except:
+                log.warning("%s - Eating exception during IPMI reboot.", name, exc_info=True)
+                pass
             alive = wait_for_reboot(slave)
         except:
             log.exception("%s - Caught exception during IPMI reboot.", name)
@@ -67,7 +70,11 @@ def reboot(name):
         status_text += "Failed.\n"
         status_text += "Attempting PDU reboot..."
         try:
-            slave.pdu.powercycle()
+            try:
+                slave.pdu.powercycle()
+            except:
+                log.warning("%s - Eating exception during PDU reboot.", name, exc_info=True)
+                pass
             alive = wait_for_reboot(slave)
         except:
             log.exception("%s - Caught exception during PDU reboot.", name)
