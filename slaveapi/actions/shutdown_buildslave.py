@@ -3,6 +3,7 @@ import requests
 import time
 
 from .results import SUCCESS, FAILURE
+from ..clients.ping import ping
 from ..clients.ssh import RemoteCommandError
 from ..slave import Slave, get_console
 
@@ -23,6 +24,9 @@ def shutdown_buildslave(name):
 
     if not slave.master_url:
         return SUCCESS, "%s - No master set, nothing to do!"
+
+    if not ping(slave.fqdn):
+        return SUCCESS, "%s - Slave is offline, nothing to do!"
 
     # We do graceful shutdowns through the master's web interface because it's
     # the simplest way that works across all platforms.
