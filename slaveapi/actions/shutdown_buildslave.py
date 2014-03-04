@@ -21,6 +21,7 @@ def shutdown_buildslave(name):
     the shutdown is confirmed by watching the slave's twistd.log file."""
     slave = Slave(name)
     slave.load_slavealloc_info()
+    slave.load_devices_info()
 
     if not slave.master_url:
         return SUCCESS, "%s - No master set, nothing to do!"
@@ -45,11 +46,12 @@ def shutdown_buildslave(name):
 
     twistd_log = "%s/%s" % (slave.basedir, "twistd.log")
     start = time.time()
-    console = get_console(slave)
-    while time.time() - start < MAX_SHUTDOWN_WAIT_TIME:
+    console = get_console(slave, usebuildbotslave=True)
+    while console and time.time() - start < MAX_SHUTDOWN_WAIT_TIME:
         try:
             rc, output = console.run_cmd("tail -n1 %s" % twistd_log)
             if "Server Shut Down" in output:
+                log.debug("%s - Shutdown succeeded on %s." % (slave.name, slave.buildbotslave.name))
                 return SUCCESS, "Shutdown succeeded."
             else:
                 time.sleep(30)

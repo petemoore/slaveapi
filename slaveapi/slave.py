@@ -6,13 +6,15 @@ from dns import resolver
 
 from furl import furl
 
-from .clients import inventory, slavealloc
+import socket
+
+from .clients import inventory, slavealloc, devices
 from .clients.bugzilla import ProblemTrackingBug, get_reboot_bug
 from .clients.buildapi import get_recent_jobs
 from .clients.ipmi import IPMIInterface
 from .clients.pdu import PDU
 from .clients.ping import ping
-from .clients.ssh import SSHConsole
+from .clients.ssh import SSHConsole, SSHException
 from .global_state import config
 
 import logging
@@ -40,8 +42,12 @@ class Slave(object):
         self.basedir = None
         self.notes = None
         self.pdu = None
+        self.recent_jobs = None
         self.master = None
         self.master_url = None
+        # used for hosts that have a different machine running buildbot than themselves
+        # Valid buildbotslave value is an instance of (or subclass thereof) the Slave class
+        self.buildbotslave = None
 
     @property
     def fqdn(self):
@@ -50,6 +56,7 @@ class Slave(object):
     def load_all_info(self):
         self.load_slavealloc_info()
         self.load_inventory_info()
+        self.load_devices_info()
         self.load_ipmi_info()
         self.load_bug_info()
         self.load_recent_job_info()
@@ -77,6 +84,17 @@ class Slave(object):
         )
         if info["pdu_fqdn"]:
             self.pdu = PDU(info["pdu_fqdn"], info["pdu_port"])
+
+    def load_devices_info(self):
+        log.info("%s - Getting devices.json info", self.name)
+        device_info = devices.get_device(
+            self.name, config["devices_json_url"]
+        )
+        if not device_info or "foopy" not in device_info or device_info["foopy"] == "None":
+            return
+        # Now set the buildbotslave since we have a foopy!
+        self.buildbotslave = BuildbotSlave(device_info["foopy"])
+        self.buildbotslave.load_all_info()
 
     def load_ipmi_info(self):
         # Also per IT, the IPMI Interface, if it exists, can
@@ -127,8 +145,11 @@ class Slave(object):
             "bug": None,
             "ipmi": None,
             "pdu": None,
-            "recent_jobs": self.recent_jobs
+            "recent_jobs": None,
+            "buildbotslave": None,
         }
+        if self.recent_jobs:
+            data["recent_jobs"] = self.recent_jobs
         if self.bug and self.bug.data:
             data["bug"] = {
                 "id": self.bug.id_,
@@ -143,8 +164,16 @@ class Slave(object):
                 "fqdn": self.pdu.fqdn,
                 "port": self.pdu.port,
             }
+        if self.buildbotslave:
+            data["buildbotslave"] = self.buildbotslave.to_dict()
         return data
 
+class BuildbotSlave(Slave):
+    # e.g. a foopy
+    def load_all_info(self):
+        self.load_inventory_info()
+        self.load_ipmi_info()
+        self.load_bug_info()
 
 def is_alive(slave, timeout=300):
     log.info("%s - Checking for signs of life", slave.name)
@@ -178,5 +207,19 @@ def wait_for_reboot(slave, alive_timeout=300, down_timeout=60):
     # Then wait for it come back up.
     return is_alive(slave, timeout=alive_timeout)
 
-def get_console(slave):
-    return SSHConsole(slave.ip, config["ssh_credentials"])
+def get_console(slave, usebuildbotslave=False):
+    realslave = slave
+    if usebuildbotslave:
+        # Sometimes buildbot is run on different host than the slave
+        # slave.basedir is still accurate, though.
+        realslave = slave.buildbotslave or slave
+
+    console = SSHConsole(realslave.ip, config["ssh_credentials"])
+    try:
+        console.connect()  # Make sure we can connect properly
+        return console
+    except (socket.error, SSHException), e:
+        log.exception(e)
+        console.disconnect() # Don't hold a connection
+        return None  # No valid console
+    return None  # How did we get here?

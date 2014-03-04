@@ -28,6 +28,7 @@ def reboot(name):
     status_text = ""
     slave = Slave(name)
     slave.load_inventory_info()
+    slave.load_devices_info()
     slave.load_ipmi_info()
     slave.load_bug_info(createIfMissing=False)
     status_text += "Attempting SSH reboot..."
@@ -36,18 +37,19 @@ def reboot(name):
     # If the slave is pingable, try an SSH reboot...
     try:
         if ping(slave.fqdn):
-            console = get_console(slave)
-            # Sometimes the SSH session goes away before the command can
-            # successfully complete. In order to avoid misinterpreting that
-            # as some sort of other failure, we need to assume that it suceeds.
-            # wait_for_reboot will confirm that the slave goes down before
-            # coming back up, so this is OK to do.
-            try:
-                console.reboot()
-            except:
-                log.warning("%s - Eating exception during SSH reboot.", name, exc_info=True)
-                pass
-            alive = wait_for_reboot(slave)
+            console = get_console(slave, usebuildbotslave=False)
+            if console:
+                # Sometimes the SSH session goes away before the command can
+                # successfully complete. In order to avoid misinterpreting that
+                # as some sort of other failure, we need to assume that it suceeds.
+                # wait_for_reboot will confirm that the slave goes down before
+                # coming back up, so this is OK to do.
+                try:
+                    console.reboot()
+                except:
+                    log.warning("%s - Eating exception during SSH reboot.", name, exc_info=True)
+                    pass
+                alive = wait_for_reboot(slave)
     except:
         log.exception("%s - Caught exception during SSH reboot.", name)
 

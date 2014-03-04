@@ -1,7 +1,8 @@
 import re
 import time
+import socket
 
-from paramiko import SSHClient, AuthenticationException
+from paramiko import SSHClient, AuthenticationException, SSHException
 
 import logging
 log = logging.getLogger(__name__)
@@ -70,6 +71,14 @@ class SSHConsole(object):
                         log.warning("%s - First password as %s didn't work.", self.fqdn, username)
                         first_password = False
                     last_exc = e
+                except socket.error, e:
+                    # Exit out early if there is a socket error, such as:
+                    # ECONNREFUSED (Connection Refused). These errors are
+                    # typically raised at the OS level.
+                    from errno import errorcode
+                    log.debug("%s - Socket Error (%s) - %s", self.fqdn, errorcode[e[0]], e[1])
+                    last_exc = e
+                    break
         if not self.connected:
             log.info("%s - Couldn't connect with any credentials.", self.fqdn)
             raise last_exc
@@ -78,6 +87,9 @@ class SSHConsole(object):
         if self.connected:
             self.client.close()
         self.connected = False
+    
+    def __del__(self):
+        self.disconnect()
 
     def run_cmd(self, cmd, timeout=60):
         """Runs a command on the remote console. In order to support weird SSH

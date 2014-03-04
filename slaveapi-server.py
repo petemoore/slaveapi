@@ -61,6 +61,7 @@ def load_config(ini):
     config["buildapi_api_url"] = slashify(ini.get("buildapi", "api_url"))
     config["default_domain"] = ini.get("slaves", "default_domain")
     config["ipmi_username"] = ini.get("slaves", "ipmi_username")
+    config["devices_json_url"] = ini.get("devices", "devices_json_url")
 
 def load_credentials(credentials):
     config["ssh_credentials"] = credentials["ssh"]
