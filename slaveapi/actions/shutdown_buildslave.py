@@ -51,7 +51,7 @@ def shutdown_buildslave(name):
         try:
             rc, output = console.run_cmd("tail -n1 %s" % twistd_log)
             if "Server Shut Down" in output:
-                log.debug("%s - Shutdown succeeded on %s." % (slave.name, slave.buildbotslave.name))
+                log.debug("%s - Shutdown succeeded." % slave.name)
                 return SUCCESS, "Shutdown succeeded."
             else:
                 time.sleep(30)
