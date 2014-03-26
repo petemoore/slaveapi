@@ -1,4 +1,5 @@
 import logging
+import time
 
 from gevent import queue, spawn
 
@@ -55,9 +56,11 @@ class Processor(object):
                 log.debug("Processing item: %s", item)
                 slave, action, args, kwargs, res = item
                 messages.put((RUNNING, item))
+                start_ts = time.time()
                 res, msg = action(slave, *args, **kwargs)
+                finish_ts = time.time()
 
-                messages.put((res, item, msg))
+                messages.put((res, item, msg, start_ts, finish_ts))
 
                 # todo, bail after max jobs
                 if jobs >= self.max_jobs:

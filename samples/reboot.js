@@ -2,7 +2,7 @@ var SLAVEAPI = "http://cruncher.srv.releng.scl3.mozilla.com:8000";
 
 function poll_for_success(requestid, slave) {
     var resultsElement = $("#results");
-    var url = SLAVEAPI + "/slave/" + slave + "/action/reboot" + "?requestid=" + requestid;
+    var url = SLAVEAPI + "/slaves/" + slave + "/actions/reboot" + "?requestid=" + requestid;
     $.ajax(url, {"type": "get"})
     .done(function(data) {
         if (data["state"] != "pending") {
@@ -17,7 +17,7 @@ function poll_for_success(requestid, slave) {
 }
 
 function reboot(slave) {
-    var url = SLAVEAPI + "/slave/" + slave + "/action/reboot";
+    var url = SLAVEAPI + "/slaves/" + slave + "/actions/reboot";
 
     $.post(url)
     .fail(function(response) {

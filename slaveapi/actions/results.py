@@ -2,16 +2,24 @@ from collections import defaultdict
 
 from gevent.event import Event
 
+import time
+
 PENDING, RUNNING, SUCCESS, FAILURE = range(4)
 
 class ActionResult(object):
     """Contains basic information about the result of a specific Action."""
-    def __init__(self, slave, action, state=PENDING):
+    def __init__(self, slave, action, state=PENDING,
+                 request_timestamp=int(time.time()),
+                 start_timestamp=0,
+                 finish_timestamp=0):
         self.id_ = id(self)
         self.slave = slave
         self.action = action
         self._state = state
         self._text = ""
+        self._request_timestamp = request_timestamp
+        self._start_timestamp = start_timestamp
+        self._finish_timestamp = finish_timestamp
         self.event = Event()
 
     @property
@@ -34,6 +42,30 @@ class ActionResult(object):
     def text(self, text):
         self._text = text
 
+    @property
+    def request_timestamp(self):
+        return self._request_timestamp
+
+    @request_timestamp.setter
+    def request_timestamp(self, timestamp):
+        self._request_timestamp = timestamp
+
+    @property
+    def start_timestamp(self):
+        return self._start_timestamp
+
+    @start_timestamp.setter
+    def start_timestamp(self, timestamp):
+        self._start_timestamp = timestamp
+
+    @property
+    def finish_timestamp(self):
+        return self._finish_timestamp
+
+    @finish_timestamp.setter
+    def finish_timestamp(self, timestamp):
+        self._finish_timestamp = timestamp
+
     def is_done(self):
         if self.event.isSet():
             return True
@@ -49,10 +81,16 @@ class ActionResult(object):
             {
                 "state": 2,
                 "text": "Great success!",
+                "request_timestamp": 1392414314,
+                "start_timestamp": 1392414315,
+                "finish_timestamp": 1392414316,
                 "requestid": "234567832"
             }
         """
-        data = {"state": self.state, "text": self.text}
+        data = {"state": self.state, "text": self.text,
+                "request_timestamp": self._request_timestamp,
+                "start_timestamp": self._start_timestamp,
+                "finish_timestamp": self._finish_timestamp}
         if include_requestid:
             data["requestid"] = self.id_
         return data
@@ -73,7 +111,10 @@ def dictify_results(results):
                 "reboot": {
                     "1235543252": {
                         "state": 2,
-                        "text": "Great success!"
+                        "text": "Great success!",
+                        "request_timestamp": 1392414314,
+                        "start_timestamp": 1392414315,
+                        "finish_timestamp": 1392414316
                     }
                 }
             },
@@ -81,7 +122,10 @@ def dictify_results(results):
                 "reboot": {
                     "5748263211": {
                         "state": 3,
-                        "text": "Failure :("
+                        "text": "Failure :(",
+                        "request_timestamp": 1392414317,
+                        "start_timestamp": 1392414318,
+                        "finish_timestamp": 1392414319
                     }
                 }
             }
