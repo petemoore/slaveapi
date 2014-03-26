@@ -112,7 +112,7 @@ def run(config_file):
         # TODO: test credentials at startup
 
         # Setup max concurrency for buildapi
-        max_buildapi = ini.get("buildapi", "max_concurrent")
+        max_buildapi = int(ini.get("buildapi", "max_concurrent"))
         if "buildapi" not in semaphores:
             semaphores["buildapi"] = Semaphore(max_buildapi)
         else:
