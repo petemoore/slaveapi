@@ -1,3 +1,5 @@
+from mozpoolclient import MozpoolHandler
+
 from .results import SUCCESS, FAILURE
 from ..clients.bugzilla import file_reboot_bug
 from ..clients.ping import ping
@@ -53,6 +55,17 @@ def reboot(name):
                 alive = wait_for_reboot(slave)
     except:
         log.exception("%s - Caught exception during SSH reboot.", name)
+
+    # If there is a mozpool server associated
+    if not alive and slave.mozpool_server:
+        status_text += "Failed.\n"
+        status_text += "Attempting reboot via Mozpool..."
+        try:
+            mozpoolhandler = MozpoolHandler(self.mozpool_server)
+            mozpoolhandler.device_power_cycle(slave.name, None)
+            alive = wait_for_reboot(slave)
+        except:
+            log.exception("%s - Caught exception during mozpool reboot.", name)
 
     # If that doesn't work, maybe an IPMI reboot will...
     if not alive and slave.ipmi:

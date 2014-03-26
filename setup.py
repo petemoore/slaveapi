@@ -29,5 +29,6 @@ setup(
         "furl>=0.3.5",
         "orderedmultidict>=0.7.1",
         "pytz>=2013.7",
+        "mozpoolclient==0.1.5",
     ],
 )

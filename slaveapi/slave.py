@@ -29,6 +29,7 @@ class Slave(Machine):
         self.recent_jobs = None
         self.master = None
         self.master_url = None
+        self.mozpool_server = None
         # used for hosts that have a different machine running buildbot than themselves
         # Valid buildbotslave value is an instance of (or subclass thereof) the Slave class
         self.buildbotslave = None
@@ -57,6 +58,8 @@ class Slave(Machine):
 
     def load_inventory_info(self):
         info = Machine.load_inventory_info(self)
+        if info["imaging_server"]:
+            self.mozpool_server = "http://%s" % info["imaging_server"]
         # Return info to allow subclasses to do stuff with data, without refetching
         return info
 
@@ -104,6 +107,7 @@ class Slave(Machine):
             "bug": None,
             "recent_jobs": None,
             "buildbotslave": None,
+            "mozpool_server": None,
         })
         if self.recent_jobs:
             data["recent_jobs"] = self.recent_jobs
@@ -114,6 +118,8 @@ class Slave(Machine):
             }
         if self.buildbotslave:
             data["buildbotslave"] = self.buildbotslave.to_dict()
+        if self.mozpool_server:
+            data["mozpool_server"] = self.mozpool_server
         return data
 
 class BuildbotSlave(Machine):

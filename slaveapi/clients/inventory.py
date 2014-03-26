@@ -34,4 +34,10 @@ def get_system(fqdn, api, username, password):
         info["pdu_fqdn"] = None
         info["pdu_port"] = None
 
+    # If the system has a mozpool server managing it, it's expressed as this key
+    imaging_server = find_key_value(info, "system.imaging_server.0")
+    if imaging_server:
+        info["imaging_server"] = imaging_server
+    else:
+        info["imaging_server"] = None
     return info
