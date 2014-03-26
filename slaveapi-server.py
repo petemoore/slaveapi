@@ -15,6 +15,9 @@ import gevent, gevent.core
 from gevent import pywsgi, socket
 from gevent.event import Event
 
+# Semaphore is in gevent.lock for gevent >= 1.0, coros is deprecated but available
+from gevent.coros import Semaphore
+
 # Need to patch subprocess by hand, because it's provided by a different module
 import gevent_subprocess
 import subprocess
@@ -35,6 +38,7 @@ import daemon
 from daemon.daemon import get_maximum_file_descriptors
 
 from slaveapi.global_state import bugzilla_client, config, processor, messenger
+from slaveapi.global_state import semaphores
 from slaveapi.web import app
 
 log = logging.getLogger(__name__)
@@ -93,6 +97,8 @@ def run(config_file):
     listener = None
     handler = None
 
+    cached_sem_max = {"buildapi": 0}
+
     while True:
         # Despite our caller already opening and reading this, we need to do it
         # here to make sure we pick up any changes during a reload.
@@ -104,6 +110,15 @@ def run(config_file):
         credentials = json.load(open(credentials_file))
         load_credentials(credentials)
         # TODO: test credentials at startup
+
+        # Setup max concurrency for buildapi
+        max_buildapi = ini.get("buildapi", "max_concurrent")
+        if "buildapi" not in semaphores:
+            semaphores["buildapi"] = Semaphore(max_buildapi)
+        else:
+            if max_buildapi != cached_sem_max["buildapi"]:
+                semaphores["buildapi"].counter += max_buildapi - cached_sem_max["buildapi"]
+        cached_sem_max["buildapi"] = max_buildapi
 
         listen = ini.get("server", "listen")
         port = ini.getint("server", "port")

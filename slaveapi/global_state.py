@@ -15,3 +15,5 @@ processor = Processor()
 
 from .messenger import Messenger
 messenger = Messenger()
+
+semaphores = {}
