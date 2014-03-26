@@ -1,20 +1,14 @@
-import time
-
 from bzrest.errors import BugNotFound
-
-from dns import resolver
 
 from furl import furl
 
 import socket
 
-from .clients import inventory, slavealloc, devices
+from .clients import slavealloc, devices
 from .clients.bugzilla import ProblemTrackingBug, get_reboot_bug
 from .clients.buildapi import get_recent_jobs
-from .clients.ipmi import IPMIInterface
-from .clients.pdu import PDU
-from .clients.ping import ping
 from .clients.ssh import SSHConsole, SSHException
+from .machines.base import Machine
 from .global_state import config
 
 import logging
@@ -24,24 +18,14 @@ def windows2msys(path_):
     (drive, therest) = path_.split(":")
     return "/" + drive[0] + therest.replace("\\", "/")
 
-class Slave(object):
+class Slave(Machine):
     def __init__(self, name):
-        if "." not in name:
-            name += "." + config["default_domain"]
-        answer = resolver.query(name)
-        self.name = answer.canonical_name.to_text().split(".")[0]
-        self.domain = answer.canonical_name.parent().to_text().rstrip(".")
-        self.ip = answer[0].to_text()
-        # Per IT, parsing the FQDN is the best way to find the colo.
-        # Our hostnames always end in $colo.mozilla.com.
-        self.colo = self.fqdn.split(".")[-3]
-        self.ipmi = None
+        Machine.__init__(self, name)
         self.bug = None
         self.reboot_bug = None
         self.enabled = None
         self.basedir = None
         self.notes = None
-        self.pdu = None
         self.recent_jobs = None
         self.master = None
         self.master_url = None
@@ -49,15 +33,10 @@ class Slave(object):
         # Valid buildbotslave value is an instance of (or subclass thereof) the Slave class
         self.buildbotslave = None
 
-    @property
-    def fqdn(self):
-        return "%s.%s" % (self.name, self.domain)
-
     def load_all_info(self):
+        Machine.load_all_info(self)
         self.load_slavealloc_info()
-        self.load_inventory_info()
         self.load_devices_info()
-        self.load_ipmi_info()
         self.load_bug_info()
         self.load_recent_job_info()
 
@@ -77,13 +56,9 @@ class Slave(object):
             self.master_url = furl().set(scheme="http", host=self.master, port=master_info["http_port"])
 
     def load_inventory_info(self):
-        log.info("%s - Getting inventory info", self.name)
-        info = inventory.get_system(
-            self.fqdn, config["inventory_api_url"], config["inventory_username"],
-            config["inventory_password"],
-        )
-        if info["pdu_fqdn"]:
-            self.pdu = PDU(info["pdu_fqdn"], info["pdu_port"])
+        info = Machine.load_inventory_info(self)
+        # Return info to allow subclasses to do stuff with data, without refetching
+        return info
 
     def load_devices_info(self):
         log.info("%s - Getting devices.json info", self.name)
@@ -95,19 +70,6 @@ class Slave(object):
         # Now set the buildbotslave since we have a foopy!
         self.buildbotslave = BuildbotSlave(device_info["foopy"])
         self.buildbotslave.load_all_info()
-
-    def load_ipmi_info(self):
-        # Also per IT, the IPMI Interface, if it exists, can
-        # always be found by appending "-mgmt.build.mozilla.org" to the name.
-        try:
-            ipmi_fqdn = "%s-mgmt.%s" % (self.name, config["default_domain"])
-            resolver.query(ipmi_fqdn)
-            # This will return None if the IPMI interface doesn't work for some
-            # reason.
-            self.ipmi = IPMIInterface.get_if_exists(ipmi_fqdn, config["ipmi_username"], config["ipmi_password"])
-        except resolver.NXDOMAIN:
-            # IPMI Interface doesn't exist.
-            pass
 
     def load_bug_info(self, createIfMissing=False):
         log.info("%s - Getting bug info", self.name)
@@ -134,20 +96,15 @@ class Slave(object):
         any desired information (slavealloc, etc.) is loaded prior to
         serialization."""
 
-        data = {
-            "fqdn": self.fqdn,
-            "domain": self.domain,
-            "ip": self.ip,
-            "colo": self.colo,
+        data = Machine.to_dict(self)
+        data.update({
             "enabled": self.enabled,
             "basedir": self.basedir,
             "notes": self.notes,
             "bug": None,
-            "ipmi": None,
-            "pdu": None,
             "recent_jobs": None,
             "buildbotslave": None,
-        }
+        })
         if self.recent_jobs:
             data["recent_jobs"] = self.recent_jobs
         if self.bug and self.bug.data:
@@ -155,57 +112,13 @@ class Slave(object):
                 "id": self.bug.id_,
                 "is_open": self.bug.data["is_open"]
             }
-        if self.ipmi:
-            data["ipmi"] = {
-                "fqdn": self.ipmi.fqdn,
-            }
-        if self.pdu:
-            data["pdu"] = {
-                "fqdn": self.pdu.fqdn,
-                "port": self.pdu.port,
-            }
         if self.buildbotslave:
             data["buildbotslave"] = self.buildbotslave.to_dict()
         return data
 
-class BuildbotSlave(Slave):
+class BuildbotSlave(Machine):
     # e.g. a foopy
-    def load_all_info(self):
-        self.load_inventory_info()
-        self.load_ipmi_info()
-        self.load_bug_info()
-
-def is_alive(slave, timeout=300):
-    log.info("%s - Checking for signs of life", slave.name)
-    start = time.time()
-    while time.time() - start < timeout:
-        if ping(slave.ip):
-            log.debug("%s - Slave is alive", slave.name)
-            return True
-        else:
-            log.debug("%s - Slave isn't alive yet", slave.name)
-            time.sleep(5)
-    else:
-        log.error("%s - Timeout of %d exceeded, giving up", slave.name, timeout)
-        return False
-
-def wait_for_reboot(slave, alive_timeout=300, down_timeout=60):
-    log.info("%s - Waiting %d seconds for reboot.", slave.name, down_timeout)
-    # First, wait for the slave to go down.
-    start = time.time()
-    while time.time() - start < down_timeout:
-        if not ping(slave.ip, count=1, deadline=2):
-            log.debug("%s - Slave is confirmed to be down, waiting for revival.", slave.name)
-            break
-        else:
-            log.debug("%s - Slave is not down yet...", slave.name)
-            time.sleep(1)
-    else:
-        log.error("%s - Slave didn't go down in allotted time, assuming it didn't reboot.", slave.name)
-        return False
-
-    # Then wait for it come back up.
-    return is_alive(slave, timeout=alive_timeout)
+    pass
 
 def get_console(slave, usebuildbotslave=False):
     realslave = slave

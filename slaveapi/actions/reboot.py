@@ -1,7 +1,8 @@
 from .results import SUCCESS, FAILURE
 from ..clients.bugzilla import file_reboot_bug
 from ..clients.ping import ping
-from ..slave import Slave, wait_for_reboot, get_console
+from ..machines.base import wait_for_reboot
+from ..slave import Slave, get_console
 
 import logging
 log = logging.getLogger(__name__)
