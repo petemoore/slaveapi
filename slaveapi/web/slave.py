@@ -6,6 +6,7 @@ from flask.views import MethodView
 from .action_base import ActionView
 from ..actions.reboot import reboot
 from ..actions.shutdown_buildslave import shutdown_buildslave
+from ..actions.buildslave_uptime import buildslave_uptime
 from ..slave import Slave as SlaveClass
 
 log = logging.getLogger(__name__)
@@ -36,4 +37,11 @@ class ShutdownBuildslave(ActionView):
     for details on how buildslave shutdowns are performed."""
     def __init__(self, *args, **kwargs):
         self.action = shutdown_buildslave
+        ActionView.__init__(self, *args, **kwargs)
+
+class GetUptime(ActionView):
+    """Get the build slave uptime (in seconds).
+    """
+    def __init__(self, *args, **kwargs):
+        self.action = buildslave_uptime
         ActionView.__init__(self, *args, **kwargs)
