@@ -44,7 +44,6 @@ class GetUptime(ActionView):
     :py:class:`slaveapi.web.action_base.ActionView` for details on GET and POST
     methods. See :py:func:`slaveapi.actions.buildslave_uptime.buildslave_uptime`
     for details on how Uptime is retrieved."""
-    """
     def __init__(self, *args, **kwargs):
         self.action = buildslave_uptime
         ActionView.__init__(self, *args, **kwargs)
