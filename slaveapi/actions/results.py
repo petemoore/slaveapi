@@ -9,7 +9,7 @@ PENDING, RUNNING, SUCCESS, FAILURE = range(4)
 class ActionResult(object):
     """Contains basic information about the result of a specific Action."""
     def __init__(self, slave, action, state=PENDING,
-                 request_timestamp=int(time.time()),
+                 request_timestamp=0,
                  start_timestamp=0,
                  finish_timestamp=0):
         self.id_ = id(self)
@@ -17,6 +17,8 @@ class ActionResult(object):
         self.action = action
         self._state = state
         self._text = ""
+        if not request_timestamp:
+            request_timestamp = time.time()
         self._request_timestamp = request_timestamp
         self._start_timestamp = start_timestamp
         self._finish_timestamp = finish_timestamp
