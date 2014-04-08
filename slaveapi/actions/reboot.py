@@ -19,6 +19,9 @@ def reboot(name):
     * SSH: Logs into the machine via SSH and reboots it with an \
         appropriate command.
 
+    * Mozpool: Connects to Mozpool and issues a reboot command. \
+        If the slave has no mozpool interface, this is skipped.
+
     * IPMI: Uses the slave's IPMI interface to initiate a hard \
         reboot. If the slave has no IPMI interface, this is skipped.
 

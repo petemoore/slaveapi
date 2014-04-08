@@ -69,7 +69,9 @@ def get_unix_uptime(cmd_text):
 
 
 def buildslave_uptime(name):
-    """Get the build slave uptime (time since last reboot).
+    """Attempts to retrieve the build slave uptime (time since last reboot).
+    This is done with the "uptime" command on Unix-based OS's, and
+    by running "net statistics server" on windows.
     """
     slave = Slave(name)
     slave.load_slavealloc_info()

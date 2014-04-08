@@ -10,6 +10,9 @@ Endpoints
 .. autoclass:: slaveapi.web.results.Results
     :members: get
 
+/slaves/:slave/actions/buildslave_uptime
+===========================================
+.. autoclass:: slaveapi.web.slave.GetUptime
 
 /slaves/:slave/actions/reboot
 =============================
