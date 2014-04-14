@@ -10,6 +10,10 @@ Endpoints
 .. autoclass:: slaveapi.web.results.Results
     :members: get
 
+/slaves/:slave/actions/buildslave_last_activity
+===============================================
+.. autoclass:: slaveapi.web.slave.GetLastActivity
+
 /slaves/:slave/actions/buildslave_uptime
 ===========================================
 .. autoclass:: slaveapi.web.slave.GetUptime

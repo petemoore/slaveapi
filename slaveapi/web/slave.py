@@ -7,6 +7,7 @@ from .action_base import ActionView
 from ..actions.reboot import reboot
 from ..actions.shutdown_buildslave import shutdown_buildslave
 from ..actions.buildslave_uptime import buildslave_uptime
+from ..actions.buildslave_last_activity import buildslave_last_activity
 from ..slave import Slave as SlaveClass
 
 log = logging.getLogger(__name__)
@@ -46,4 +47,13 @@ class GetUptime(ActionView):
     for details on how Uptime is retrieved."""
     def __init__(self, *args, **kwargs):
         self.action = buildslave_uptime
+        ActionView.__init__(self, *args, **kwargs)
+
+class GetLastActivity(ActionView):
+    """Request the last activity age (in seconds).  See
+    :py:class:`slaveapi.web.action_base.ActionView` for details on GET and POST
+    methods. See :py:func:`slaveapi.actions.buildslave_last_activity.buildslave_last_activity`
+    for details on how LastActivity is retrieved."""
+    def __init__(self, *args, **kwargs):
+        self.action = buildslave_last_activity
         ActionView.__init__(self, *args, **kwargs)

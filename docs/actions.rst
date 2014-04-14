@@ -2,6 +2,10 @@
 Actions
 =======
 
+Buildslave Last Activity
+========================
+.. autoclass:: slaveapi.actions.buildslave_last_activity.buildslave_last_activity
+
 Buildslave Uptime
 =================
 .. autoclass:: slaveapi.actions.buildslave_uptime.buildslave_uptime
