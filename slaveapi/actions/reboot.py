@@ -64,7 +64,7 @@ def reboot(name):
         status_text += "Failed.\n"
         status_text += "Attempting reboot via Mozpool..."
         try:
-            mozpoolhandler = MozpoolHandler(self.mozpool_server)
+            mozpoolhandler = MozpoolHandler(slave.mozpool_server)
             mozpoolhandler.device_power_cycle(slave.name, None)
             alive = wait_for_reboot(slave)
         except:
