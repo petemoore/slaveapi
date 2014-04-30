@@ -55,8 +55,8 @@ class Processor(object):
 
                 log.debug("Processing item: %s", item)
                 slave, action, args, kwargs, res = item
-                messages.put((RUNNING, item))
                 start_ts = time.time()
+                messages.put((RUNNING, item, start_ts))
                 res, msg = action(slave, *args, **kwargs)
                 finish_ts = time.time()
 
