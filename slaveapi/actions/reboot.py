@@ -9,7 +9,7 @@ from ..slave import Slave, get_console
 import logging
 log = logging.getLogger(__name__)
 
-def reboot(name):
+def reboot(name, update_bug=True):
     """Attempts to reboot the named slave a series of ways, escalating from
     peacefully to mercilessly. Details of what was attempted and the result
     are reported into the slave's problem tracking bug at the end. Reboots
@@ -111,10 +111,11 @@ def reboot(name):
         else:
             if not slave.bug:
                 slave.load_bug_info(createIfMissing=True)
-            slave.reboot_bug = file_reboot_bug(slave)
-            status_text += "Filed IT bug for reboot (bug %s)" % slave.reboot_bug.id_
-            data = {}
-            if not slave.bug.data["is_open"]:
-                data["status"] = "REOPENED"
-            slave.bug.add_comment(status_text, data=data)
+            if update_bug:
+                status_text += "Filed IT bug for reboot (bug %s)" % slave.reboot_bug.id_
+                slave.reboot_bug = file_reboot_bug(slave)
+                data = {}
+                if not slave.bug.data["is_open"]:
+                    data["status"] = "REOPENED"
+                slave.bug.add_comment(status_text, data=data)
             return FAILURE, status_text

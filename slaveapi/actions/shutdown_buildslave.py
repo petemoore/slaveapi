@@ -19,15 +19,18 @@ def shutdown_buildslave(name):
     Buildbot Master the slave talks to, and requesting the shut down there.
     (Slave-side graceful shutdown doesn't work on Windows.) Once initiated,
     the shutdown is confirmed by watching the slave's twistd.log file."""
+    status_text = "Gracefully shutting down slave..."
     slave = Slave(name)
     slave.load_slavealloc_info()
     slave.load_devices_info()
 
     if not slave.master_url:
-        return SUCCESS, "%s - No master set, nothing to do!"
+        status_text += "Success\nNo master set, nothing to do!"
+        return SUCCESS, status_text
 
     if not ping(slave.fqdn):
-        return SUCCESS, "%s - Slave is offline, nothing to do!"
+        status_text += "Success\nSlave is offline, nothing to do!"
+        return SUCCESS, status_text
 
     # We do graceful shutdowns through the master's web interface because it's
     # the simplest way that works across all platforms.
@@ -42,7 +45,8 @@ def shutdown_buildslave(name):
         requests.post(str(shutdown_url), allow_redirects=False)
     except requests.RequestException:
         log.exception("%s - Failed to initiate graceful shutdown.", slave.name)
-        return FAILURE, "%s - Failed to initiate graceful shutdown through %s" % (slave.name, shutdown_url)
+        status_text += "Failure\nFailed to initiate graceful shutdown through %s" % (shutdown_url,)
+        return FAILURE,  status_text
 
     twistd_log = "%s/%s" % (slave.basedir, "twistd.log")
     start = time.time()
@@ -51,12 +55,14 @@ def shutdown_buildslave(name):
         try:
             rc, output = console.run_cmd("tail -n1 %s" % twistd_log)
             if "Server Shut Down" in output:
+                status_text += "Success"
                 log.debug("%s - Shutdown succeeded." % slave.name)
-                return SUCCESS, "Shutdown succeeded."
+                return SUCCESS, status_text
             else:
                 time.sleep(30)
         except RemoteCommandError:
             log.debug("Caught error when waiting for shutdown, trying again...", exc_info=True)
             time.sleep(30)
     else:
-        return FAILURE, "Couldn't confirm shutdown."
+        status_text += "Failure\nCouldn't confirm shutdown"
+        return FAILURE, status_text

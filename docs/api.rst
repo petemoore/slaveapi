@@ -27,6 +27,9 @@ Endpoints
 ==========================================
 .. autoclass:: slaveapi.web.slave.ShutdownBuildslave
 
+/slaves/:slave/actions/disable
+==========================================
+.. autoclass:: slaveapi.web.slave.Disable
 
 -------
 Helpers

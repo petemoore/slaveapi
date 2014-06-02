@@ -1,6 +1,6 @@
 import logging
 
-from flask import jsonify
+from flask import jsonify, request, make_response
 from flask.views import MethodView
 
 from .action_base import ActionView
@@ -8,7 +8,9 @@ from ..actions.reboot import reboot
 from ..actions.shutdown_buildslave import shutdown_buildslave
 from ..actions.buildslave_uptime import buildslave_uptime
 from ..actions.buildslave_last_activity import buildslave_last_activity
+from ..actions.disable import disable
 from ..slave import Slave as SlaveClass
+from ..util import normalize_truthiness
 
 log = logging.getLogger(__name__)
 
@@ -57,3 +59,26 @@ class GetLastActivity(ActionView):
     def __init__(self, *args, **kwargs):
         self.action = buildslave_last_activity
         ActionView.__init__(self, *args, **kwargs)
+
+
+class Disable(ActionView):
+    """Request a slave to be disabled. See
+    :py:class:`slaveapi.web.action_base.ActionView` for details on GET and POST
+    methods. See :py:func:`slaveapi.actions.disable.disable`
+    for details on what options are supported"""
+    def __init__(self, *args, **kwargs):
+        self.action = disable
+        ActionView.__init__(self, *args, **kwargs)
+
+    def post(self, slave, *args, **kwargs):
+        reason = request.form.get('reason')
+        try:
+            force = normalize_truthiness(request.form.get('force', False))
+        except ValueError as e:
+            return make_response(
+                jsonify({'error': 'incorrect args for use_force in post',
+                         'msg': str(e)}),
+                400
+            )
+        return super(Disable, self).post(slave, *args, force=force,
+                                         reason=reason, **kwargs)
