@@ -7,7 +7,7 @@ setup(
     version=__version__,
     description="A tool for interacting with build and test slaves.",
     author="Mozilla Release Engineering",
-    packages=["slaveapi", "slaveapi.actions", "slaveapi.clients", "slaveapi.web", "slaveapi.machines"],
+    packages=["slaveapi", "slaveapi.actions", "slaveapi.clients", "slaveapi.web", "slaveapi.machines", "slaveapi.util"],
     scripts=["slaveapi-server.py"],
     install_requires=[
         "gevent==0.13.8",
