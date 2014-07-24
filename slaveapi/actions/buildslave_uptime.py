@@ -85,11 +85,11 @@ def buildslave_uptime(name):
     output = None
     console = get_console(slave, usebuildbotslave=True)
     try:
-        log.debug("running 'uptime'")
+        log.debug("%s - running 'uptime'" % name)
         rc, output = console.run_cmd('uptime')
         if rc != 0:
             is_unix = False
-            log.debug("running 'net statistics server'")
+            log.debug("%s - running 'net statistics server'" % name)
             rc, output = console.run_cmd('net statistics server')
             if rc != 0:
                 failed = True

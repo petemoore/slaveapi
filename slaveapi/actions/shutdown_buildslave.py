@@ -34,7 +34,7 @@ def shutdown_buildslave(name):
 
     # We do graceful shutdowns through the master's web interface because it's
     # the simplest way that works across all platforms.
-    log.info("Starting graceful shutdown.")
+    log.info("%s - Starting graceful shutdown.", slave.name)
     shutdown_url = furl(slave.master_url)
     shutdown_url.path = "/buildslaves/%s/shutdown" % slave.name
     try:

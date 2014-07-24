@@ -1,7 +1,6 @@
 from collections import defaultdict
 
 from gevent import queue
-from gevent import local
 
 from bzrest.client import BugzillaClient
 
@@ -18,5 +17,3 @@ from .messenger import Messenger
 messenger = Messenger()
 
 semaphores = {}
-
-log_data = local.local()

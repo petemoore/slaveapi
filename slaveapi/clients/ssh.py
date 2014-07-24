@@ -55,9 +55,9 @@ class SSHConsole(object):
             first_password = True
             for p in passwords:
                 try:
-                    log.debug("Attempting to connect as %s", username)
+                    log.debug("%s - Attempting to connect as %s", self.fqdn, username)
                     self.client.connect(hostname=self.fqdn, username=username, password=p, timeout=timeout, look_for_keys=False, allow_agent=False)
-                    log.info("Connection as %s succeeded!", username)
+                    log.info("%s - Connection as %s succeeded!", self.fqdn, username)
                     self.connected = True
                     # Nothing else to do, easiest just to return here rather
                     # than break out of two loops.
@@ -66,9 +66,9 @@ class SSHConsole(object):
                 # different auths. We need to hang on to it to re-raise in case
                 # we ultimately fail.
                 except AuthenticationException, e:
-                    log.debug("Authentication failure.")
+                    log.debug("%s - Authentication failure.", self.fqdn)
                     if first_password:
-                        log.warning("First password as %s didn't work.", username)
+                        log.warning("%s - First password as %s didn't work.", self.fqdn, username)
                         first_password = False
                     last_exc = e
                 except socket.error, e:
@@ -76,11 +76,11 @@ class SSHConsole(object):
                     # ECONNREFUSED (Connection Refused). These errors are
                     # typically raised at the OS level.
                     from errno import errorcode
-                    log.debug("Socket Error (%s) - %s", errorcode[e[0]], e[1])
+                    log.debug("%s - Socket Error (%s) - %s", self.fqdn, errorcode[e[0]], e[1])
                     last_exc = e
                     break
         if not self.connected:
-            log.info("Couldn't connect with any credentials.")
+            log.info("%s - Couldn't connect with any credentials.", self.fqdn)
             raise last_exc
 
     def disconnect(self):
@@ -103,7 +103,7 @@ class SSHConsole(object):
         if not self.connected:
             self.connect()
 
-        log.debug("Running %s", cmd)
+        log.debug("%s - Running %s", self.fqdn, cmd)
         try:
             output = None
             rc = None
@@ -147,19 +147,19 @@ class SSHConsole(object):
                 shell.close()
                 raise RemoteCommandError("Timed out when running command.")
         except:
-            log.debug("Caught exception while running command:", exc_info=True)
+            log.debug("%s - Caught exception while running command:", self.fqdn, exc_info=True)
             raise RemoteCommandError("Caught exception while running command.", output=output, rc=rc)
         finally:
             self.disconnect()
 
 
     def reboot(self):
-        log.info("Attempting to reboot")
+        log.info("%s - Attempting to reboot", self.fqdn)
 
         for cmd in self.reboot_commands:
             rc, output = self.run_cmd(cmd)
             if rc == 0:
-                log.info("Successfully initiated reboot")
+                log.info("%s - Successfully initiated reboot", self.fqdn)
                 # Success! We're done!
                 return
         else:

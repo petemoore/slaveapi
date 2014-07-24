@@ -10,8 +10,6 @@ class Messenger(object):
         pass
 
     def __call__(self):
-        # use "-M-" for messenger as our "slave"
-        log_data.slave = "-M-"
         while True:
             msg = messages.get()
             log.debug("Got message: %s", msg)

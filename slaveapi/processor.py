@@ -4,7 +4,7 @@ import time
 from gevent import queue, spawn
 
 from .actions.results import ActionResult, RUNNING, FAILURE
-from .global_state import messages, log_data
+from .global_state import messages
 
 log = logging.getLogger(__name__)
 
@@ -24,7 +24,7 @@ class Processor(object):
     def add_work(self, slave, action, *args, **kwargs):
         res = ActionResult(slave, action.__name__)
         item = (slave, action, args, kwargs, res)
-        log.debug("Adding work to queue: %s", item)
+        log.debug("%s - Adding work to queue: %s", slave, item)
         self.work_queue.put(item)
         self._start_worker()
         return res
@@ -45,8 +45,6 @@ class Processor(object):
         jobs = 0
         while True:
             try:
-                # Reset slave to empty
-                log_data.slave = "-.-"
                 jobs += 1
                 try:
                     item = self.work_queue.get(block=False)
@@ -57,7 +55,6 @@ class Processor(object):
 
                 log.debug("Processing item: %s", item)
                 slave, action, args, kwargs, res = item
-                log_data.slave = slave
                 start_ts = time.time()
                 messages.put((RUNNING, item, start_ts))
                 res, msg = action(slave, *args, **kwargs)

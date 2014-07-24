@@ -39,7 +39,7 @@ class Machine(object):
         Sets the self.pdu object
         Uses self.fqdn"""
 
-        log.info("Getting inventory info")
+        log.info("%s - Getting inventory info", self.name)
         info = inventory.get_system(
             self.fqdn, config["inventory_api_url"], config["inventory_username"],
             config["inventory_password"],
@@ -92,32 +92,32 @@ class Machine(object):
         return data
 
 def is_alive(machine, timeout=300):
-    log.info("Checking for signs of life")
+    log.info("%s - Checking for signs of life", machine.name)
     start = time.time()
     while time.time() - start < timeout:
         if ping(machine.ip):
-            log.debug("Machine is alive")
+            log.debug("%s - Machine is alive", machine.name)
             return True
         else:
-            log.debug("Machine isn't alive yet")
+            log.debug("%s - Machine isn't alive yet", machine.name)
             time.sleep(5)
     else:
-        log.error("Timeout of %d exceeded, giving up", timeout)
+        log.error("%s - Timeout of %d exceeded, giving up", machine.name, timeout)
         return False
 
 def wait_for_reboot(machine, alive_timeout=300, down_timeout=60):
-    log.info("Waiting %d seconds for reboot.", down_timeout)
+    log.info("%s - Waiting %d seconds for reboot.", machine.name, down_timeout)
     # First, wait for the machine to go down.
     start = time.time()
     while time.time() - start < down_timeout:
         if not ping(machine.ip, count=1, deadline=2):
-            log.debug("Machine is confirmed to be down, waiting for revival.")
+            log.debug("%s - Machine is confirmed to be down, waiting for revival.", machine.name)
             break
         else:
-            log.debug("Machine is not down yet...")
+            log.debug("%s - Machine is not down yet...", machine.name)
             time.sleep(1)
     else:
-        log.error("Machine didn't go down in allotted time, assuming it didn't reboot.")
+        log.error("%s - Machine didn't go down in allotted time, assuming it didn't reboot.", machine.name)
         return False
 
     # Then wait for it come back up.
