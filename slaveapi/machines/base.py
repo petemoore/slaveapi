@@ -39,7 +39,7 @@ class Machine(object):
         Sets the self.pdu object
         Uses self.fqdn"""
 
-        log.info("%s - Getting inventory info", self.name)
+        log.info("Getting inventory info")
         info = inventory.get_system(
             self.fqdn, config["inventory_api_url"], config["inventory_username"],
             config["inventory_password"],
@@ -92,32 +92,32 @@ class Machine(object):
         return data
 
 def is_alive(machine, timeout=300):
-    log.info("%s - Checking for signs of life", machine.name)
+    log.info("Checking for signs of life")
     start = time.time()
     while time.time() - start < timeout:
         if ping(machine.ip):
-            log.debug("%s - Machine is alive", machine.name)
+            log.debug("Machine is alive")
             return True
         else:
-            log.debug("%s - Machine isn't alive yet", machine.name)
+            log.debug("Machine isn't alive yet")
             time.sleep(5)
     else:
-        log.error("%s - Timeout of %d exceeded, giving up", machine.name, timeout)
+        log.error("Timeout of %d exceeded, giving up", timeout)
         return False
 
 def wait_for_reboot(machine, alive_timeout=300, down_timeout=60):
-    log.info("%s - Waiting %d seconds for reboot.", machine.name, down_timeout)
+    log.info("Waiting %d seconds for reboot.", down_timeout)
     # First, wait for the machine to go down.
     start = time.time()
     while time.time() - start < down_timeout:
         if not ping(machine.ip, count=1, deadline=2):
-            log.debug("%s - Machine is confirmed to be down, waiting for revival.", machine.name)
+            log.debug("Machine is confirmed to be down, waiting for revival.")
             break
         else:
-            log.debug("%s - Machine is not down yet...", machine.name)
+            log.debug("Machine is not down yet...")
             time.sleep(1)
     else:
-        log.error("%s - Machine didn't go down in allotted time, assuming it didn't reboot.", machine.name)
+        log.error("Machine didn't go down in allotted time, assuming it didn't reboot.")
         return False
 
     # Then wait for it come back up.

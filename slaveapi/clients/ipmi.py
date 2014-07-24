@@ -35,23 +35,23 @@ class IPMIInterface(object):
         self.run_cmd("power on")
 
     def powercycle(self, delay=5):
-        log.info("%s - Powercycling", self.fqdn)
-        log.debug("%s - Trying soft shutdown.", self.fqdn)
+        log.info("Powercycling")
+        log.debug("Trying soft shutdown.")
         self.poweroff(hard=False)
         if self.wait_for_off():
-            log.debug("%s - Soft shutdown succeeded.", self.fqdn)
+            log.debug("Soft shutdown succeeded.")
         else:
-            log.debug("%s - Soft shutdown failed, trying a hard shutdown.", self.fqdn)
+            log.debug("Soft shutdown failed, trying a hard shutdown.")
             self.poweroff(hard=True)
             if self.wait_for_off():
-                log.debug("%s - Hard shutdown succeeded.", self.fqdn)
+                log.debug("Hard shutdown succeeded.")
             else:
                 raise Exception()
-        log.debug("%s - Waiting %d seconds before powering on.", self.fqdn, delay)
+        log.debug("Waiting %d seconds before powering on.", delay)
         time.sleep(delay)
-        log.debug("%s - Turning machine back on.", self.fqdn)
+        log.debug("Turning machine back on.")
         self.poweron()
-        log.info("%s - Powercycle completed.", self.fqdn)
+        log.info("Powercycle completed.")
 
     def wait_for_off(self, wait=120):
         time_left = 120
@@ -84,7 +84,7 @@ class IPMIInterface(object):
                 if e.returncode == -6:
                     attempt += 1
                     continue
-                log.info("%s - Unable to establish IPMI session, retrying...", self.fqdn)
-                log.debug("%s - Return code was %d, output was:", self.fqdn, e.returncode)
+                log.info("Unable to establish IPMI session, retrying...")
+                log.debug("Return code was %d, output was:", e.returncode)
                 log.debug(e.output)
                 raise

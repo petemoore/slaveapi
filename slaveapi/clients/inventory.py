@@ -22,7 +22,7 @@ def get_system(fqdn, api, username, password):
     url.args["format"] = "json"
     url.args["hostname"] = fqdn
     auth = (username, password)
-    log.debug("%s - Making request to %s", fqdn, url)
+    log.debug("Making request to %s", url)
     info = defaultdict(lambda: None)
     try:
         result = requests.get(str(url), auth=auth).json()["objects"][0]

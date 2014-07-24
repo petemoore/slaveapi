@@ -53,11 +53,11 @@ def reboot(name, update_bug=True):
                 try:
                     console.reboot()
                 except:
-                    log.warning("%s - Eating exception during SSH reboot.", name, exc_info=True)
+                    log.warning("Eating exception during SSH reboot.", exc_info=True)
                     pass
                 alive = wait_for_reboot(slave)
     except:
-        log.exception("%s - Caught exception during SSH reboot.", name)
+        log.exception("Caught exception during SSH reboot.")
 
     # If there is a mozpool server associated
     if not alive and slave.mozpool_server:
@@ -68,7 +68,7 @@ def reboot(name, update_bug=True):
             mozpoolhandler.device_power_cycle(slave.name, None)
             alive = wait_for_reboot(slave)
         except:
-            log.exception("%s - Caught exception during mozpool reboot.", name)
+            log.exception("Caught exception during mozpool reboot.")
 
     # If that doesn't work, maybe an IPMI reboot will...
     if not alive and slave.ipmi:
@@ -78,11 +78,11 @@ def reboot(name, update_bug=True):
             try:
                 slave.ipmi.powercycle()
             except:
-                log.warning("%s - Eating exception during IPMI reboot.", name, exc_info=True)
+                log.warning("Eating exception during IPMI reboot.", exc_info=True)
                 pass
             alive = wait_for_reboot(slave)
         except:
-            log.exception("%s - Caught exception during IPMI reboot.", name)
+            log.exception("Caught exception during IPMI reboot.")
 
     # Mayhaps a PDU reboot?
     if not alive and slave.pdu:
@@ -92,11 +92,11 @@ def reboot(name, update_bug=True):
             try:
                 slave.pdu.powercycle()
             except:
-                log.warning("%s - Eating exception during PDU reboot.", name, exc_info=True)
+                log.warning("Eating exception during PDU reboot.", exc_info=True)
                 pass
             alive = wait_for_reboot(slave)
         except:
-            log.exception("%s - Caught exception during PDU reboot.", name)
+            log.exception("Caught exception during PDU reboot.")
 
     if alive:
         # To minimize bugspam, no comment is added to the bug if we were

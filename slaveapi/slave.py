@@ -42,7 +42,7 @@ class Slave(Machine):
         self.load_recent_job_info()
 
     def load_slavealloc_info(self):
-        log.info("%s - Getting slavealloc info", self.name)
+        log.info("Getting slavealloc info")
         info = slavealloc.get_slave(config["slavealloc_api_url"], name=self.name)
         master_info = slavealloc.get_master(config["slavealloc_api_url"], info["current_masterid"])
         self.enabled = info["enabled"]
@@ -64,7 +64,7 @@ class Slave(Machine):
         return info
 
     def load_devices_info(self):
-        log.info("%s - Getting devices.json info", self.name)
+        log.info("Getting devices.json info")
         device_info = devices.get_device(
             self.name, config["devices_json_url"]
         )
@@ -75,21 +75,21 @@ class Slave(Machine):
         self.buildbotslave.load_all_info()
 
     def load_bug_info(self, createIfMissing=False):
-        log.info("%s - Getting bug info", self.name)
+        log.info("Getting bug info")
         self.bug = ProblemTrackingBug(self.name, loadInfo=False)
         try:
             self.bug.refresh()
             self.reboot_bug = get_reboot_bug(self)
         except BugNotFound:
             if createIfMissing:
-                log.info("%s - Couldn't find bug, creating it...", self.name)
+                log.info("Couldn't find bug, creating it...")
                 self.bug.create()
                 self.bug.refresh()
             else:
                 self.bug = None
 
     def load_recent_job_info(self, n_jobs=1):
-        log.info("%s - Getting recent job info", self.name)
+        log.info("Getting recent job info")
         self.recent_jobs = get_recent_jobs(
             self.name, config["buildapi_api_url"], n_jobs=n_jobs
         )
