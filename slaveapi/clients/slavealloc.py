@@ -6,6 +6,7 @@ import json
 
 import logging
 from ..actions.results import FAILURE, SUCCESS
+from ..util import logException
 
 log = logging.getLogger(__name__)
 
@@ -52,8 +53,8 @@ def update_slave(api, name, data):
     try:
         response = requests.put(str(url), data=payload)
     except RequestException as e:
-        log.exception("%s - Caught exception while updating slavealloc.", name)
-        log.exception("Exception message: %s" % e)
+        logException(log.error, "Caught exception while updating slavealloc.")
+        logException(log.error, "Exception message: %s" % e)
         return_msg += "Failed\nCaught exception while updating: %s" % (e,)
         return FAILURE, return_msg
 

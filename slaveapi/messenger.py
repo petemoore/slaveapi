@@ -1,6 +1,6 @@
 import logging
 
-from .global_state import messages
+from .global_state import messages, log_data
 
 log = logging.getLogger(__name__)
 
@@ -10,6 +10,8 @@ class Messenger(object):
         pass
 
     def __call__(self):
+        # use "-M-" for messenger as our "slave"
+        log_data.slave = "-M-"
         while True:
             msg = messages.get()
             log.debug("Got message: %s", msg)

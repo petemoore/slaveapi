@@ -1,6 +1,9 @@
 from collections import defaultdict
 
 from gevent import queue
+from gevent import local
+
+log_data = local.local()
 
 from bzrest.client import BugzillaClient
 

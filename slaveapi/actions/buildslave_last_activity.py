@@ -35,17 +35,17 @@ def buildslave_last_activity(name):
 
     if uptime < 3 * 60:
         # Assume we're still booting
-        log.debug("%s - uptime is %.2f; assuming we're still booting up", name, uptime)
+        log.debug("uptime is %.2f; assuming we're still booting up", uptime)
         return SUCCESS, { "state": "booting", "last_activity": 0 }
 
     console = get_console(slave, usebuildbotslave=False)
     try:
-        log.debug("%s - tailing twistd.log" % name)
+        log.debug("tailing twistd.log")
         log.debug("slave.basedir='%s'" % slave.basedir)
         # we'll disregard the return code b/c it will be non-zero if twistd.log.1 is not found
         rc, output = console.run_cmd("tail -n 100 %(basedir)s/twistd.log.1 %(basedir)s/twistd.log" % { 'basedir': slave.basedir })
     except RemoteCommandError:
-        return FAILURE, "%s - failed to tail twistd.log:" % name
+        return FAILURE, "failed to tail twistd.log"
     console.disconnect()
 
     # account for the time it took to retrieve the log tail
@@ -68,18 +68,18 @@ def buildslave_last_activity(name):
             continue
 
         if "RunProcess._startCommand" in line or "using PTY: " in line:
-            log.debug("%s - started command - %s", name, line.strip())
+            log.debug("started command - %s", line.strip())
             running_command = True
         elif "commandComplete" in line or "stopCommand" in line:
-            log.debug("%s - done command - %s", name, line.strip())
+            log.debug("done command - %s", line.strip())
             running_command = False
 
         if "Shut Down" in line:
             # Check if this happened before we booted, i.e. we're still booting up
             if (cur_time - last_activity) > uptime:
                 log.debug(
-                    "%s - last activity delta (%s) is older than uptime (%s); assuming we're still booting %s",
-                    name, (last_activity - cur_time), uptime, line.strip())
+                    "last activity delta (%s) is older than uptime (%s); assuming we're still booting %s",
+                    (last_activity - cur_time), uptime, line.strip())
                 last_state = "booting"
             else:
                 last_state = "stopped"

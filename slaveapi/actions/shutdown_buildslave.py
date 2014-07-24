@@ -6,6 +6,7 @@ from .results import SUCCESS, FAILURE
 from ..clients.ping import ping
 from ..clients.ssh import RemoteCommandError
 from ..slave import Slave, get_console
+from ..util import logException
 
 import logging
 log = logging.getLogger(__name__)
@@ -34,7 +35,7 @@ def shutdown_buildslave(name):
 
     # We do graceful shutdowns through the master's web interface because it's
     # the simplest way that works across all platforms.
-    log.info("%s - Starting graceful shutdown.", slave.name)
+    log.info("Starting graceful shutdown.")
     shutdown_url = furl(slave.master_url)
     shutdown_url.path = "/buildslaves/%s/shutdown" % slave.name
     try:
@@ -44,7 +45,7 @@ def shutdown_buildslave(name):
         # or not anyways.
         requests.post(str(shutdown_url), allow_redirects=False)
     except requests.RequestException:
-        log.exception("%s - Failed to initiate graceful shutdown.", slave.name)
+        logException(log.error, "Failed to initiate graceful shutdown.")
         status_text += "Failure\nFailed to initiate graceful shutdown through %s" % (shutdown_url,)
         return FAILURE,  status_text
 
@@ -56,12 +57,12 @@ def shutdown_buildslave(name):
             rc, output = console.run_cmd("tail -n1 %s" % twistd_log)
             if "Server Shut Down" in output:
                 status_text += "Success"
-                log.debug("%s - Shutdown succeeded." % slave.name)
+                log.debug("Shutdown succeeded.")
                 return SUCCESS, status_text
             else:
                 time.sleep(30)
         except RemoteCommandError:
-            log.debug("Caught error when waiting for shutdown, trying again...", exc_info=True)
+            logException(log.debug, "Caught error when waiting for shutdown, trying again...")
             time.sleep(30)
     else:
         status_text += "Failure\nCouldn't confirm shutdown"

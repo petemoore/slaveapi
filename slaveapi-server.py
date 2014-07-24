@@ -38,8 +38,9 @@ import daemon
 from daemon.daemon import get_maximum_file_descriptors
 
 from slaveapi.global_state import bugzilla_client, config, processor, messenger
-from slaveapi.global_state import semaphores
+from slaveapi.global_state import semaphores, log_data
 from slaveapi.web import app
+from slaveapi.util import logException
 
 log = logging.getLogger(__name__)
 
@@ -83,8 +84,14 @@ def setup_logging(level, logfile=None, maxsize=None, maxfiles=None):
         handler = RotatingFileHandler(logfile, maxBytes=maxsize, backupCount=maxfiles)
     else:
         handler = logging.StreamHandler()
+        
+    class SlaveLogFilter(logging.Filter):
+        def filter(self, record):
+            record.slave = getattr(log_data, "slave", "-=-")
+            return True
 
-    fmt = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
+    fmt = logging.Formatter("%(asctime)s - %(levelname)s - %(slave)s - %(message)s")
+    handler.addFilter(SlaveLogFilter())
     handler.setFormatter(fmt)
 
     logger = logging.getLogger()
@@ -207,7 +214,7 @@ if __name__ == "__main__":
         try:
             run(args["<config_file>"])
         except:
-            log.exception("Couldn't run server.")
+            logException(log.error, "Couldn't run server.")
             raise
         finally:
             try:
@@ -222,4 +229,4 @@ if __name__ == "__main__":
                         raise
                 log.info("Exiting")
             except:
-                log.exception("Error shutting down.")
+                logException(log.error, "Error shutting down.")
