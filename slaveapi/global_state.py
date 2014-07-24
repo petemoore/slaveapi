@@ -5,8 +5,6 @@ from gevent import local
 
 from bzrest.client import BugzillaClient
 
-log_data = local.local()
-
 messages = queue.Queue()
 
 config = {}
@@ -20,3 +18,5 @@ from .messenger import Messenger
 messenger = Messenger()
 
 semaphores = {}
+
+log_data = local.local()
