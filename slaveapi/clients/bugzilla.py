@@ -43,8 +43,8 @@ class ProblemTrackingBug(Bug):
         self.id_ = resp["id"]
 
 
-reboot_product = "mozilla.org"
-reboot_component = "Server Operations: DCOps"
+reboot_product = "Infrastructure & Operations"
+reboot_component = "DCOps"
 reboot_summary = "%(slave)s is unreachable"
 def get_reboot_bug(slave):
     qs = "?product=%s&component=%s" % (reboot_product, reboot_component)
